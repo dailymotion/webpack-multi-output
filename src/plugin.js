@@ -10,6 +10,7 @@ const re = /\[WebpackMultiOutput\]/
 export default function WebpackMultiOutput(options: Object = {}): void {
   this.options = {
     values: options.values ? options.values : [],
+    keepOriginal: options.keepOriginal ? true : false,
   }
 }
 
@@ -21,8 +22,6 @@ export function getFilePath(string: string): string {
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
-  const self = this
-
   compiler.plugin('compilation', compilation => {
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
@@ -43,6 +42,10 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       console.log(`[WebpackMultiOutput] Adding asset ${langAssetName}`)
       compilation.assets[langAssetName] = langAsset
     })
+
+    if (!this.options.keepOriginal) {
+      delete compilation.assets[outputName]
+    }
 
     for (let assetName in compilation.assets) {
       const _source = clone(compilation.assets[assetName])

@@ -38,10 +38,6 @@ const config = {
   ],
 }
 
-const bundlePath = path.join(__dirname, 'dist/bundle.js')
-const bundlePathFR = path.join(__dirname, 'dist/bundle_fr.js')
-const bundlePathEN = path.join(__dirname, 'dist/bundle_en.js')
-
 describe('Webpack Multi Output', () => {
   it('should export a plugin', () => {
     expect(WebpackMultiOutputPlugin).to.be.a('function')
@@ -62,6 +58,10 @@ describe('Webpack Multi Output', () => {
   })
 
   describe('Webpack plugin', () => {
+    const bundlePath = path.join(__dirname, 'dist/bundle.js')
+    const bundlePathFR = path.join(__dirname, 'dist/bundle_fr.js')
+    const bundlePathEN = path.join(__dirname, 'dist/bundle_en.js')
+
     before((done) => {
       webpack(config, () => {
         done()
@@ -73,7 +73,7 @@ describe('Webpack Multi Output', () => {
       const bundleExistsFR = fs.existsSync(bundlePathFR)
       const bundleExistsEN = fs.existsSync(bundlePathEN)
 
-      expect(bundleExists).to.be.true
+      expect(bundleExists).to.be.false
       expect(bundleExistsFR).to.be.true
       expect(bundleExistsEN).to.be.true
     })
@@ -90,6 +90,45 @@ describe('Webpack Multi Output', () => {
         expect(content).to.contain('This is a test translated')
         done()
       })
+    })
+  })
+
+  describe('keepOriginal', () => {
+    const bundlePath = path.join(__dirname, 'dist-alt/bundle.js')
+    const bundlePathFR = path.join(__dirname, 'dist-alt/bundle_fr.js')
+    const bundlePathEN = path.join(__dirname, 'dist-alt/bundle_en.js')
+
+    before((done) => {
+      const altConfig = {
+        ...config,
+        output: {
+          path: path.resolve(__dirname, 'dist-alt'),
+          filename: 'bundle.js',
+        },
+        plugins: [
+          new webpack.DefinePlugin({
+            __LOCALE__: `'fr'`,
+          }),
+          new WebpackMultiOutputPlugin({
+            values: ['fr', 'en'],
+            keepOriginal: true,
+          }),
+        ],
+      }
+
+      webpack(altConfig, () => {
+        done()
+      })
+    })
+
+    it('should produce a bundle', () => {
+      const bundleExists = fs.existsSync(bundlePath)
+      const bundleExistsFR = fs.existsSync(bundlePathFR)
+      const bundleExistsEN = fs.existsSync(bundlePathEN)
+
+      expect(bundleExists).to.be.true
+      expect(bundleExistsFR).to.be.true
+      expect(bundleExistsEN).to.be.true
     })
   })
 })
