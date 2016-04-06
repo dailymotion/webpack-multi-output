@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import {expect} from 'chai'
 import webpack from 'webpack'
-import WebpackMultiOutputPlugin from '../src/plugin'
+import WebpackMultiOutputPlugin, {getFilePath} from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
 
 const config = {
@@ -29,12 +29,12 @@ const config = {
     }
   },
   plugins: [
+    new webpack.DefinePlugin({
+      __LOCALE__: `'fr'`,
+    }),
     new WebpackMultiOutputPlugin({
       values: ['fr', 'en']
     }),
-    new webpack.DefinePlugin({
-      __LOCALE__: `'fr'`,
-    })
   ],
 }
 
@@ -49,6 +49,16 @@ describe('Webpack Multi Output', () => {
 
   it('should export a loader', () => {
     expect(WebpackMultiOutputLoader).to.be.a('function')
+  })
+
+  describe('Regex', () => {
+    it('should export a function', () => {
+      expect(getFilePath).to.be.a('function')
+    })
+
+    it('should return the filename', () => {
+      expect(getFilePath('/* [WebpackMultiOutput] /path/to/file.js [WebpackMultiOutput] */')).to.equal('/path/to/file.js')
+    })
   })
 
   describe('Webpack plugin', () => {
@@ -69,14 +79,14 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should include the appropriate content', done => {
-      const contentFR = fs.readFile(bundlePathFR, 'utf-8', (err, content) => {
+      fs.readFile(bundlePathFR, 'utf-8', (err, content) => {
         expect(content).to.contain('Ceci est un test')
         done()
       })
     })
 
     it('should include the appropriate content', done => {
-      const contentFR = fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
+      fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
         expect(content).to.contain('This is a test translated')
         done()
       })

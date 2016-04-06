@@ -2,7 +2,8 @@
 
 import fs from 'fs'
 import path from 'path'
-import merge from 'lodash.merge'
+import clone from 'lodash.clone'
+import {CachedSource, RawSource} from 'webpack-sources'
 
 const re = /\[WebpackMultiOutput\]/
 
@@ -12,7 +13,15 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   }
 }
 
+export function getFilePath(string: string): string {
+  const filePathRe = /\[WebpackMultiOutput\] (.*?) \[WebpackMultiOutput\]/
+
+  return string.match(filePathRe)[1]
+}
+
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
+  const self = this
+
   compiler.plugin('compilation', compilation => {
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
@@ -29,39 +38,23 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       const ext = path.extname(outputName)
       const filename = outputName.replace(ext, '')
       const langAssetName = `${filename}_${value}${ext}`
-      const langAsset = merge({}, baseAsset)
+      const langAsset = clone(baseAsset)
       console.log(`[WebpackMultiOutput] Adding asset ${langAssetName}`)
       compilation.assets[langAssetName] = langAsset
     })
 
-    let _assetIndex = -1
-
     for (let assetName in compilation.assets) {
-      const asset = compilation.assets[assetName]
-      for (let children in asset._source.children) {
-        if (typeof asset._source.children[children].children !== 'undefined') {
-          const chunks = asset._source.children[children].children
-          chunks[chunks.length - 2].children.forEach((chunk, chunkIndex) => {
-            if (typeof chunk === 'object') {
-              if (chunk.children) {
-                chunk.children.forEach((source, sourceIndex) => {
-                  if (typeof source === 'object') {
-                    const _value = source._source._source._source._value
-                    const {result, newIndex} = this.replaceContent(_value, _assetIndex)
-                    _assetIndex = newIndex
+      const _source = clone(compilation.assets[assetName])
+      const _value = path.basename(assetName).replace(path.extname(assetName), '').split('_')[1]
 
-                    if (result !== _value) {
-                      console.log(source)
-                    }
+      if (_value) {
+        let lines = _source.source().split('\n')
 
-                    // ;_;
-                    compilation.assets[assetName]._source.children[children].children[chunks.length - 2].children[chunkIndex].children[sourceIndex]._source._source._source._value = result
-                  }
-                })
-              }
-            }
-          })
-        }
+        lines = lines.map(line => {
+          return this.replaceContent(line, _value)
+        })
+
+        compilation.assets[assetName] = new CachedSource(new RawSource(lines.join('\n')))
       }
     }
 
@@ -69,27 +62,21 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   })
 }
 
-WebpackMultiOutput.prototype.replaceContent = function(source: string, index: number): Object {
-  if (!re.test(source) || index < 0) {
-    return {
-      result: source,
-      newIndex: index < 0 ? 0 : index,
-    }
+WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string): string {
+  if (!re.test(source)) {
+    return source
   }
 
-  const resourcePath = source.replace('/* [WebpackMultiOutput]', '').replace('*/', '').replace(/\s/gi, '')
+  const resourcePath = getFilePath(source)
   const basename = path.basename(resourcePath)
   const ext = path.extname(basename)
   const language = basename.replace(ext, '')
 
-  const newResourcePath = path.join(resourcePath.replace(basename, ''), `${this.options.values[index]}${ext}`)
+  let newResourcePath = path.join(resourcePath.replace(basename, ''), `${value}${ext}`)
 
-  const result = `module.exports = ${fs.readFileSync(newResourcePath, 'utf-8')};`
-
-  console.log('CHANGE')
-
-  return {
-    result,
-    newIndex: index++,
+  if (!fs.existsSync(newResourcePath)) {
+    newResourcePath = resourcePath
   }
+
+  return `module.exports = ${fs.readFileSync(newResourcePath, 'utf-8')};`
 }

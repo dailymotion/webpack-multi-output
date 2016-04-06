@@ -28,3 +28,8 @@ module.exports = {
   ]
 }
 ```
+
+## Todo
+
+* use `bundle_[lang].js` in output, interpolate the value in plugin
+* test with a bunch of plugins

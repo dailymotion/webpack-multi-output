@@ -1,5 +1,5 @@
-module.exports = function(source) {
+module.exports = function() {
   this.cacheable && this.cacheable()
 
-  return `/* [WebpackMultiOutput] ${this.resourcePath} */`
+  return `/* [WebpackMultiOutput] ${this.resourcePath} [WebpackMultiOutput] */`
 }
