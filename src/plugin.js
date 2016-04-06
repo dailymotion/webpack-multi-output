@@ -15,8 +15,9 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 
 export function getFilePath(string: string): string {
   const filePathRe = /\[WebpackMultiOutput\] (.*?) \[WebpackMultiOutput\]/
+  const match = string.match(filePathRe)
 
-  return string.match(filePathRe)[1]
+  return match ? match[1] : ''
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
