@@ -1,4 +1,4 @@
-# Webpack Multi Output
+# Webpack Multi Output [![Build Status](https://travis-ci.com/dailymotion/webpack-multi-output.svg?token=BQpiDRDdVVk7MYBpasVF&branch=master)](https://travis-ci.com/dailymotion/webpack-multi-output)
 
 **Work in progress**
 
