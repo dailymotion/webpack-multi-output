@@ -69,7 +69,15 @@ describe('Webpack Multi Output', () => {
     const bundlePathEN = path.join(__dirname, 'dist/bundle_en.js')
 
     before((done) => {
-      webpack(config, () => {
+      webpack(config, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
         done()
       })
     })
@@ -122,7 +130,15 @@ describe('Webpack Multi Output', () => {
         ],
       }
 
-      webpack(altConfig, () => {
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
         done()
       })
     })
@@ -183,7 +199,15 @@ describe('Webpack Multi Output', () => {
         ],
       }
 
-      webpack(altConfig, () => {
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
         done()
       })
     })
@@ -200,6 +224,10 @@ describe('Webpack Multi Output', () => {
 
     it('should include the appropriate content for value FR', done => {
       fs.readFile(bundlePathFR, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
         expect(content).to.contain('Ceci est un test')
         done()
       })
@@ -207,6 +235,10 @@ describe('Webpack Multi Output', () => {
 
     it('should include the appropriate content for value EN', done => {
       fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
         expect(content).to.contain('This is a test translated')
         done()
       })
