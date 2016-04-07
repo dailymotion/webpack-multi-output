@@ -1,2 +1,3 @@
 test/dist
-test/dist-alt
+test/dist-keep-original
+test/dist-combine-plugins

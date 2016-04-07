@@ -1,12 +1,16 @@
 # Webpack Multi Output [![Build Status](https://travis-ci.com/dailymotion/webpack-multi-output.svg?token=BQpiDRDdVVk7MYBpasVF&branch=master)](https://travis-ci.com/dailymotion/webpack-multi-output)
 
-**Work in progress**
-
 Allows the creation of multiple bundles with one configuration.
+
+## Installation
+
+```shell
+$ npm install dailymotion/webpack-multi-output
+```
 
 ## Usage
 
-Use the loader with the appropriate file extension you want:
+Use the loader with the appropriate file extension you want, then use the plugin to define the values you want as output:
 
 ```js
 import {WebpackMultiOutputLoader, WebpackMultiOutputPlugin} from 'webpack-multi-output'
@@ -47,7 +51,32 @@ var translations = require(`./i18n/en.i18n`)
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 * `keepOriginal`: By default the plugin will remove the basic `bundle.js` file to only keep the versions created by the plugin. Set to true to keep it (default to false).
 
+## Combining with other plugins
+
+Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. The plugin performs the replacement of a comment in the code, so if you're using the `UglifyJsPlugin` plugin, you will want to place it in front of it, as `UglifyJsPlugin` will probably remove comments:
+
+```
+// ...
+plugins: [
+  // the define plugin will probably be in front
+  new webpack.DefinePlugin({
+    __DEV__: process.env.NODE_ENV == 'dev',
+  }),
+  new WebpackMultiOutputPlugin({
+    values: ['en', 'fr', 'es']
+  }),
+  // uglify should be after as it removes comments
+  new webpack.optimize.UglifyJsPlugin({
+    output:{
+      comments: false
+    },
+    compressor: {
+      warnings: false
+    }
+  }),
+]
+```
+
 ## Todo
 
 * use `bundle_[lang].js` in output, interpolate the value in plugin
-* test with a bunch of plugins

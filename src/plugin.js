@@ -3,7 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import clone from 'lodash.clone'
-import {CachedSource, RawSource} from 'webpack-sources'
+import {ConcatSource} from 'webpack-sources'
 
 const re = /\[WebpackMultiOutput\]/
 
@@ -22,47 +22,53 @@ export function getFilePath(string: string): string {
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
-  compiler.plugin('compilation', compilation => {
+  compiler.plugin('compilation', (compilation: Object): void => {
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
     }
-  })
 
-  compiler.plugin('emit', (compilation, callback) => {
-    const outputName = compilation.options.output.filename
-
-    const baseAsset = compilation.assets[outputName]
-
-    // add asset for each value
-    this.options.values.forEach(value => {
-      const ext = path.extname(outputName)
-      const filename = outputName.replace(ext, '')
-      const langAssetName = `${filename}_${value}${ext}`
+    compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
+      const outputName = compilation.options.output.filename
+      const baseAsset = compilation.assets[outputName]
       const langAsset = clone(baseAsset)
-      console.log(`[WebpackMultiOutput] Adding asset ${langAssetName}`)
-      compilation.assets[langAssetName] = langAsset
-    })
 
-    if (!this.options.keepOriginal) {
-      delete compilation.assets[outputName]
-    }
+      // add asset for each value
+      this.options.values.forEach((value: string): void => {
+        const ext = path.extname(outputName)
+        const filename = outputName.replace(ext, '')
+        const langAssetName = `${filename}_${value}${ext}`
+        console.log(`[WebpackMultiOutput] Adding asset ${langAssetName}`)
+        compilation.assets[langAssetName] = langAsset
+      })
 
-    for (let assetName in compilation.assets) {
-      const _source = clone(compilation.assets[assetName])
-      const _value = path.basename(assetName).replace(path.extname(assetName), '').split('_')[1]
+      if (!this.options.keepOriginal) {
+        delete compilation.assets[outputName]
+      }
 
-      if (_value) {
-        let lines = _source.source().split('\n')
-
-        lines = lines.map(line => {
-          return this.replaceContent(line, _value)
+      chunks.forEach(chunk => {
+        Object.keys(compilation.assets).forEach(asset => {
+          if (chunk.files.indexOf(asset) === -1) {
+            chunk.files.push(asset)
+          }
         })
 
-        compilation.assets[assetName] = new CachedSource(new RawSource(lines.join('\n')))
-      }
-    }
+        chunk.files.forEach(file => {
+          const _source = new ConcatSource(compilation.assets[file])
+          const _value = path.basename(file).replace(path.extname(file), '').split('_')[1]
 
-    callback()
+          if (_value) {
+            let lines = _source.source().split('\n')
+
+            lines = lines.map(line => {
+              return this.replaceContent(line, _value)
+            })
+
+            compilation.assets[file] = new ConcatSource(lines.join('\n'))
+          }
+        })
+      })
+      callback()
+    })
   })
 }
 

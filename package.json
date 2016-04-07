@@ -2,11 +2,12 @@
   "name": "webpack-multi-output",
   "version": "0.1.0",
   "description": "Webpack plugin to produce multiple bundle from one import",
-  "main": "index.js",
+  "main": "lib/index.js",
   "author": "Romain Berger <romain@romainberger.com>",
   "scripts": {
-    "clean": "rm -rf test/dist test/dist-alt",
-    "test": "npm run clean && mocha --compilers js:babel-register test/*.js",
+    "build": "rm -rf lib && babel src --out-dir lib",
+    "clean": "rm -rf lib test/dist test/dist-keep-original test/dist-combine-plugins",
+    "test": "npm run clean && npm run build && mocha --compilers js:babel-register test/*.js",
     "flow": "flow"
   },
   "keywords": [
