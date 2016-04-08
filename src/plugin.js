@@ -4,14 +4,21 @@ import fs from 'fs'
 import path from 'path'
 import clone from 'lodash.clone'
 import {ConcatSource} from 'webpack-sources'
+import NodeTemplatePlugin from 'webpack/lib/node/NodeTemplatePlugin'
+import NodeTargetPlugin from 'webpack/lib/node/NodeTargetPlugin'
+import LibraryTemplatePlugin from 'webpack/lib/LibraryTemplatePlugin'
+import SingleEntryPlugin from 'webpack/lib/SingleEntryPlugin'
 
 const re = /\[WebpackMultiOutput\]/
 
 export default function WebpackMultiOutput(options: Object = {}): void {
   this.options = {
+    filename: options.filename ? options.filename : 'bundle-[value].js',
     values: options.values ? options.values : [],
-    keepOriginal: options.keepOriginal ? true : false,
   }
+
+  this.assets = []
+  this.mainBundleName = false
 }
 
 export function getFilePath(string: string): string {
@@ -23,50 +30,59 @@ export function getFilePath(string: string): string {
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
+    compilation.__webpackMultiOutput = {
+      addAssets: () => {
+        if (!this.assets.length) {
+          this.mainBundleName = compilation.outputOptions.filename
+          this.options.values.forEach(value => {
+            const asset = new ConcatSource()
+            const filename = this.options.filename.replace('[value]', value)
+            this.assets.push(filename)
+            compilation.assets[filename] = new ConcatSource()
+          })
+        }
+      }
+    }
+
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
     }
 
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
-      const outputName = compilation.options.output.filename
-      const baseAsset = compilation.assets[outputName]
-      const langAsset = clone(baseAsset)
+      const langAsset = clone(compilation.assets[this.mainBundleName])
 
-      // add asset for each value
-      this.options.values.forEach((value: string): void => {
-        const ext = path.extname(outputName)
-        const filename = outputName.replace(ext, '')
-        const langAssetName = `${filename}_${value}${ext}`
-        console.log(`[WebpackMultiOutput] Adding asset ${langAssetName}`)
-        compilation.assets[langAssetName] = langAsset
+      this.assets.forEach(asset => {
+        compilation.assets[asset] = langAsset
       })
-
-      if (!this.options.keepOriginal) {
-        delete compilation.assets[outputName]
-      }
 
       chunks.forEach(chunk => {
-        Object.keys(compilation.assets).forEach(asset => {
-          if (chunk.files.indexOf(asset) === -1) {
-            chunk.files.push(asset)
-          }
-        })
+        if (chunk.files.indexOf(this.mainBundleName) !== -1) {
+          Object.keys(compilation.assets).forEach(asset => {
+            if (chunk.files.indexOf(asset) === -1) {
+              console.log(`[WebpackMultiOutput] Add asset ${asset}`)
+              chunk.files.push(asset)
+            }
+          })
+        }
 
         chunk.files.forEach(file => {
-          const _source = new ConcatSource(compilation.assets[file])
-          const _value = path.basename(file).replace(path.extname(file), '').split('_')[1]
+          if (this.assets.indexOf(file) !== -1) {
+            const _source = new ConcatSource(compilation.assets[file])
+            const _value = path.basename(file).replace(path.extname(file), '').split('-')[1]
 
-          if (_value) {
-            let lines = _source.source().split('\n')
+            if (_value) {
+              let lines = _source.source().split('\n')
 
-            lines = lines.map(line => {
-              return this.replaceContent(line, _value)
-            })
+              lines = lines.map(line => {
+                return this.replaceContent(line, _value)
+              })
 
-            compilation.assets[file] = new ConcatSource(lines.join('\n'))
+              compilation.assets[file] = new ConcatSource(lines.join('\n'))
+            }
           }
         })
       })
+
       callback()
     })
   })

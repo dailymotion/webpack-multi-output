@@ -31,6 +31,7 @@ module.exports = {
   },
   plugins: [
     new WebpackMultiOutputPlugin({
+      filename: 'bundle-[value].js',
       values: ['en', 'fr', 'es']
     })
   ]
@@ -48,8 +49,8 @@ var translations = require(`./i18n/en.i18n`)
 
 ## Options
 
+* `filename`: Filename template for the bundles that will be generate. Must contain `[value]` somewhere, default to `bundle-[value].js`
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
-* `keepOriginal`: By default the plugin will remove the basic `bundle.js` file to only keep the versions created by the plugin. Set to true to keep it (default to false).
 
 ## Combining with other plugins
 
@@ -77,6 +78,13 @@ plugins: [
 ]
 ```
 
+### The following plugins are supported and tested in combination with `webpack-multi-output`:
+
+* `DefinePlugin`
+* `OccurenceOrderPlugin`
+* `extract-text-webpack-plugin`
+
 ## Todo
 
-* use `bundle_[lang].js` in output, interpolate the value in plugin
+* use `bundle_[value].js` in output, interpolate the value in plugin
+* add check to be sure the plugin is used with the loader

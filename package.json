@@ -24,13 +24,17 @@
     "babel-preset-stage-0": "^6.5.0",
     "babel-register": "^6.7.2",
     "chai": "^3.5.0",
+    "css-loader": "^0.23.1",
+    "extract-text-webpack-plugin": "^1.0.1",
     "flow-bin": "^0.22.1",
     "json-loader": "^0.5.4",
     "mocha": "^2.4.5",
-    "webpack": "^1.12.14"
+    "style-loader": "^0.13.1",
+    "webpack-isomorphic-tools": "^2.2.44"
   },
   "dependencies": {
     "lodash.clone": "^4.3.2",
+    "webpack": "^1.12.14",
     "webpack-sources": "^0.1.1"
   }
 }
