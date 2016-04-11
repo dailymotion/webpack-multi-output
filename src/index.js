@@ -1,2 +1,5 @@
-export {default as WebpackMultiOutputLoader} from './loader'
-export {default as WebpackMultiOutputPlugin} from './plugin'
+import loader from './loader'
+import WebpackMultiOutputPlugin from './plugin'
+
+export default loader
+export {WebpackMultiOutputPlugin}

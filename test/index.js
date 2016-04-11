@@ -7,7 +7,9 @@ import AssetsPlugin from 'assets-webpack-plugin'
 
 import WebpackMultiOutputPlugin, {getFilePath} from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
-import {WebpackMultiOutputLoader as compiledPlugin, WebpackMultiOutputPlugin as compiledLoader} from '../'
+import compiledLoader, {WebpackMultiOutputPlugin as compiledPlugin} from '../'
+
+import * as test from '../'
 
 const config = {
   entry: path.join(__dirname, 'webpack/index.js'),
@@ -49,12 +51,11 @@ describe('Webpack Multi Output', () => {
   })
 
   it('should export a loader', () => {
-    expect(WebpackMultiOutputLoader).to.be.a('function')
+    expect(compiledLoader).to.be.a('function')
   })
 
   it('should export correctly when transpiled', () => {
     expect(compiledPlugin).to.be.a('function')
-    expect(compiledLoader).to.be.a('function')
   })
 
   describe('Plugin regex checker', () => {
