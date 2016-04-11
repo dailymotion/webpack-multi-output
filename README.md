@@ -13,7 +13,7 @@ $ npm install dailymotion/webpack-multi-output
 Use the loader with the appropriate file extension you want, then use the plugin to define the values you want as output:
 
 ```js
-import {WebpackMultiOutputPlugin} from 'webpack-multi-output'
+import WebpackMultiOutputPlugin from 'webpack-multi-output/plugin'
 
 module.exports = {
   entry: path.join(__dirname, 'src/index.js'),
@@ -90,4 +90,4 @@ plugins: [
 
 * make it work with `[name]`
 * add check to be sure the plugin is used with the loader
-* make it work with sourcemap)
+* make it work with sourcemap
