@@ -3,7 +3,8 @@
 import fs from 'fs'
 import path from 'path'
 import clone from 'lodash.clone'
-import {ConcatSource, RawSource, OriginalSource} from 'webpack-sources'
+import {ConcatSource} from 'webpack-sources'
+import {getHashDigest} from 'loader-utils'
 
 const re = /\[WebpackMultiOutput\]/
 
@@ -33,10 +34,8 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           this.options.values.forEach(value => {
             const filename = this.options.filename.replace('[value]', value)
             this.assets.push(filename)
-            compilation.assets[filename] = new ConcatSource(
-              new RawSource('/* [WebpackMultiOutput] */'),
-              new OriginalSource('/* [WebpackMultiOutput] */', 'webpack-multi-output.js')
-            )
+            compilation.assets[filename] = new ConcatSource('/* WebpackMultiOutput */')
+            compilation.assets[filename].__value__ = value
           })
         }
       }
@@ -47,11 +46,20 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     }
 
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
-      const langAsset = clone(compilation.assets[this.mainBundleName])
+      let langAsset = clone(compilation.assets[this.mainBundleName])
 
-      // prevent errors in children compilations
+      // crap
+      // need to find the [name]
       if (typeof langAsset === 'undefined') {
-        return callback()
+        const assets = compilation.assets
+        if (Object.keys(assets).length > 1) {
+          this.mainBundleName = Object.keys(assets)[Object.keys(assets).length - 1]
+          langAsset = clone(assets[this.mainBundleName])
+        }
+        else {
+          // prevent errors in children compilations
+          return callback()
+        }
       }
 
       this.assets.forEach(asset => {
@@ -71,7 +79,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         chunk.files.forEach(file => {
           if (this.assets.indexOf(file) !== -1) {
             const _source = new ConcatSource(compilation.assets[file])
-            const _value = path.basename(file).replace(path.extname(file), '').split('-')[1]
+            // crap
+            const _parts = path.basename(file).replace(path.extname(file), '').split('-')
+            const _value = _parts[_parts.length - 1]
 
             if (_value) {
               let lines = _source.source().split('\n')
@@ -80,10 +90,17 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
                 return this.replaceContent(line, _value)
               })
 
-              compilation.assets[file] = new ConcatSource(
-                new RawSource(lines.join('\n')),
-                new OriginalSource(lines.join('\n'), 'webpack-multi-output.js')
-              )
+              const source = new ConcatSource(lines.join('\n'))
+
+              const filename = file.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
+                return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
+              })
+
+              compilation.assets[filename] = source
+
+              if (file !== filename) {
+                delete compilation.assets[file]
+              }
             }
           }
         })

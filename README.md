@@ -49,7 +49,7 @@ var translations = require(`./i18n/en.i18n`)
 
 ## Options
 
-* `filename`: Filename template for the bundles that will be generate. Must contain `[value]` somewhere, default to `bundle-[value].js`
+* `filename`: Filename template for the bundles that will be generate. Must contain `[value]` somewhere, default to `bundle-[value].js`. Can contain `[contenthash]`.
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 
 ## Combining with other plugins
@@ -88,7 +88,6 @@ plugins: [
 
 ## Todo
 
-* make it work with `[name]` and `[hash]`
+* make it work with `[name]`
 * add check to be sure the plugin is used with the loader
-* test with hash and stuff
-* make it work with sourcemap
+* make it work with sourcemap)

@@ -2,4 +2,5 @@ test/dist
 test/dist-keep-original
 test/dist-combine-plugins
 test/dist-assets
+test/dist-name-hash
 webpack-assets.json

@@ -87,7 +87,7 @@ describe('Webpack Multi Output', () => {
       })
     })
 
-    it('should produce a bundle for each value, but not the original one', () => {
+    it('should produce a bundle for each value', () => {
       const bundleExists = fs.existsSync(bundlePath)
       const bundleExistsFR = fs.existsSync(bundlePathFR)
       const bundleExistsEN = fs.existsSync(bundlePathEN)
@@ -188,6 +188,92 @@ describe('Webpack Multi Output', () => {
 
       expect(bundleExists).to.be.true
       expect(cssBundlePathExists).to.be.true
+      expect(bundleExistsFR).to.be.true
+      expect(bundleExistsEN).to.be.true
+    })
+
+    it('should include the appropriate content for value FR', done => {
+      fs.readFile(bundlePathFR, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
+        expect(content).to.contain('Ceci est un test')
+        done()
+      })
+    })
+
+    it('should include the appropriate content for value EN', done => {
+      fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
+        expect(content).to.contain('This is a test translated')
+        done()
+      })
+    })
+  })
+
+  describe('it should work with [name] and [hash]', () => {
+    let bundlePath
+    let bundlePathFR
+    let bundlePathEN
+
+    before((done) => {
+      const altConfig = {
+        ...config,
+        entry: {
+          app: [path.join(__dirname, 'webpack/index.js')],
+        },
+        output: {
+          path: path.resolve(__dirname, 'dist-name-hash'),
+          filename: '[name]-[hash].js',
+          publicPath: '/static/',
+        },
+        plugins: [
+          new webpack.DefinePlugin({
+            __LOCALE__: `'fr'`,
+          }),
+          new WebpackMultiOutputPlugin({
+            filename: 'app-[contenthash]-[value].js',
+            values: ['fr', 'en'],
+          }),
+        ],
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        bundlePath = path.join(__dirname, `dist-name-hash/app-${stats.hash}.js`)
+        const assets = stats.compilation.assets
+
+        const frName = Object.keys(assets).find(a => (
+          a.split('-')[a.split('-').length - 1] === 'fr.js'
+        ))
+        bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
+
+        const enName = Object.keys(assets).find(a => (
+          a.split('-')[a.split('-').length - 1] === 'en.js'
+        ))
+        bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
+
+        done()
+      })
+    })
+
+    it('should produce a bundle for each value', () => {
+      const bundleExists = fs.existsSync(bundlePath)
+      const bundleExistsFR = fs.existsSync(bundlePathFR)
+      const bundleExistsEN = fs.existsSync(bundlePathEN)
+
+      expect(bundleExists).to.be.true
       expect(bundleExistsFR).to.be.true
       expect(bundleExistsEN).to.be.true
     })
