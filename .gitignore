@@ -1,3 +1,5 @@
 test/dist
 test/dist-keep-original
 test/dist-combine-plugins
+test/dist-assets
+webpack-assets.json

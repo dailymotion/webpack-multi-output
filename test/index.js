@@ -3,9 +3,7 @@ import path from 'path'
 import {expect} from 'chai'
 import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
-import WebpackIsomorphicPlugin from 'webpack-isomorphic-tools'
-
-const isomorphicPlugin = new WebpackIsomorphicPlugin(require('./isomorphic-config'))
+import AssetsPlugin from 'assets-webpack-plugin'
 
 import WebpackMultiOutputPlugin, {getFilePath} from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
@@ -135,6 +133,7 @@ describe('Webpack Multi Output', () => {
         output: {
           path: path.resolve(__dirname, 'dist-combine-plugins'),
           filename: 'bundle.js',
+          publicPath: '/static/',
         },
         module: {
           loaders: [
@@ -153,17 +152,17 @@ describe('Webpack Multi Output', () => {
             filename: 'bundle-[value].js',
             values: ['fr', 'en'],
           }),
-          // new webpack.optimize.OccurenceOrderPlugin(true),
-          // new webpack.optimize.UglifyJsPlugin({
-          //   output:{
-          //     comments: false
-          //   },
-          //   compressor: {
-          //     warnings: false
-          //   }
-          // }),
+          new webpack.optimize.OccurenceOrderPlugin(true),
+          new webpack.optimize.UglifyJsPlugin({
+            output:{
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
           new ExtractTextPlugin('style.css'),
-          // isomorphicPlugin,
+          new AssetsPlugin(),
         ],
       }
 

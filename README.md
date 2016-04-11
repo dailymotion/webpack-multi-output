@@ -1,6 +1,6 @@
 # Webpack Multi Output [![Build Status](https://travis-ci.com/dailymotion/webpack-multi-output.svg?token=BQpiDRDdVVk7MYBpasVF&branch=master)](https://travis-ci.com/dailymotion/webpack-multi-output)
 
-Allows the creation of multiple bundles with one configuration.
+Allows the creation of multiple bundles with one configuration. Kinda like the [multi-compiler](https://github.com/webpack/webpack/tree/master/examples/multi-compiler) but where it concerns imports of a specific file extension.
 
 ## Installation
 
@@ -82,9 +82,12 @@ plugins: [
 
 * `DefinePlugin`
 * `OccurenceOrderPlugin`
+* `UglifyJsPlugin`
 * `extract-text-webpack-plugin`
+* `assets-webpack-plugin`
 
 ## Todo
 
-* use `bundle_[value].js` in output, interpolate the value in plugin
 * add check to be sure the plugin is used with the loader
+* test with hash and stuff
+* make it work with sourcemap

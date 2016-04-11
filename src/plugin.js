@@ -3,11 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import clone from 'lodash.clone'
-import {ConcatSource} from 'webpack-sources'
-import NodeTemplatePlugin from 'webpack/lib/node/NodeTemplatePlugin'
-import NodeTargetPlugin from 'webpack/lib/node/NodeTargetPlugin'
-import LibraryTemplatePlugin from 'webpack/lib/LibraryTemplatePlugin'
-import SingleEntryPlugin from 'webpack/lib/SingleEntryPlugin'
+import {ConcatSource, RawSource, OriginalSource} from 'webpack-sources'
 
 const re = /\[WebpackMultiOutput\]/
 
@@ -35,10 +31,12 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         if (!this.assets.length) {
           this.mainBundleName = compilation.outputOptions.filename
           this.options.values.forEach(value => {
-            const asset = new ConcatSource()
             const filename = this.options.filename.replace('[value]', value)
             this.assets.push(filename)
-            compilation.assets[filename] = new ConcatSource()
+            compilation.assets[filename] = new ConcatSource(
+              new RawSource('/* [WebpackMultiOutput] */'),
+              new OriginalSource('/* [WebpackMultiOutput] */', 'webpack-multi-output.js')
+            )
           })
         }
       }
@@ -50,6 +48,11 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
       const langAsset = clone(compilation.assets[this.mainBundleName])
+
+      // prevent errors in children compilations
+      if (typeof langAsset === 'undefined') {
+        return callback()
+      }
 
       this.assets.forEach(asset => {
         compilation.assets[asset] = langAsset
@@ -77,7 +80,10 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
                 return this.replaceContent(line, _value)
               })
 
-              compilation.assets[file] = new ConcatSource(lines.join('\n'))
+              compilation.assets[file] = new ConcatSource(
+                new RawSource(lines.join('\n')),
+                new OriginalSource(lines.join('\n'), 'webpack-multi-output.js')
+              )
             }
           }
         })
