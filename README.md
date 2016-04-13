@@ -1,5 +1,7 @@
 # Webpack Multi Output [![Build Status](https://travis-ci.com/dailymotion/webpack-multi-output.svg?token=BQpiDRDdVVk7MYBpasVF&branch=master)](https://travis-ci.com/dailymotion/webpack-multi-output)
 
+**Work in progress** Experimental, not really production ready. Use at your own risk. Check out [the todo list](#todo) to see what's missing.
+
 Allows the creation of multiple bundles with one configuration. Kinda like the [multi-compiler](https://github.com/webpack/webpack/tree/master/examples/multi-compiler) but where it concerns imports of a specific file extension.
 
 ## Installation
@@ -89,5 +91,10 @@ plugins: [
 ## Todo
 
 * make it work with `[name]`
+* make it work with named entry
+* make it work with multiple entries
+
+Bonus:
+
 * add check to be sure the plugin is used with the loader
 * make it work with sourcemap
