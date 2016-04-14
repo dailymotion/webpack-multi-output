@@ -236,21 +236,31 @@ describe('Webpack Multi Output', () => {
       const altConfig = {
         ...config,
         entry: {
-          app: [path.join(__dirname, 'webpack/index.js')],
+          app: [path.join(__dirname, 'webpack/complex.js')],
         },
         output: {
           path: path.resolve(__dirname, 'dist-name-hash'),
           filename: '[name]-[hash].js',
           publicPath: '/static/',
         },
+        module: {
+          loaders: [
+            ...config.module.loaders,
+            {
+              test: /\.css$/,
+              loader: ExtractTextPlugin.extract('style-loader', 'css'),
+            }
+          ]
+        },
         plugins: [
           new webpack.DefinePlugin({
             __LOCALE__: `'fr'`,
           }),
           new WebpackMultiOutputPlugin({
-            filename: 'app-[contenthash]-[value].js',
+            filename: '[name]-[contenthash]-[value].js',
             values: ['fr', 'en'],
           }),
+          new ExtractTextPlugin('[name]-[contenthash].css'),
           new webpack.optimize.UglifyJsPlugin({
             output: {
               comments: false
@@ -274,9 +284,10 @@ describe('Webpack Multi Output', () => {
         bundlePath = path.join(__dirname, `dist-name-hash/app-${stats.hash}.js`)
         const assets = stats.compilation.assets
 
-        const frName = Object.keys(assets).find(a => (
+        // needs to be fixed
+        const frName = Object.keys(assets).find(a => {
           a.split('-')[a.split('-').length - 1] === 'fr.js'
-        ))
+        })
         bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
 
         const enName = Object.keys(assets).find(a => (
