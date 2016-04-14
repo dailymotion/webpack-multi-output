@@ -15,6 +15,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   }
 
   this.assets = []
+  this.assetsToRemove = []
   this.mainBundleName = false
 }
 
@@ -99,11 +100,22 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
               compilation.assets[filename] = source
 
               if (file !== filename) {
-                delete compilation.assets[file]
+                this.assetsToRemove.push(file)
               }
             }
           }
         })
+      })
+
+      callback()
+    })
+
+    compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
+      // remove useless assets
+      Object.keys(assets).forEach(asset => {
+        if (this.assetsToRemove.indexOf(asset) !== -1) {
+          delete compilation.assets[asset]
+        }
       })
 
       callback()

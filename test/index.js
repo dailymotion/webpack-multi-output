@@ -214,9 +214,20 @@ describe('Webpack Multi Output', () => {
         done()
       })
     })
+
+    it('should have minified the assets with UglifyJsPlugin', done => {
+      fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
+        expect(content).to.not.contain('// webpackBootstrap')
+        done()
+      })
+    })
   })
 
-  describe('it should work with [name] and [hash]', () => {
+  describe('it should work with [name] and [hash] and plugins', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
@@ -239,6 +250,14 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             filename: 'app-[contenthash]-[value].js',
             values: ['fr', 'en'],
+          }),
+          new webpack.optimize.UglifyJsPlugin({
+            output:{
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
           }),
         ],
       }
@@ -297,6 +316,17 @@ describe('Webpack Multi Output', () => {
         }
 
         expect(content).to.contain('This is a test translated')
+        done()
+      })
+    })
+
+    it('should have minified the assets with UglifyJsPlugin', done => {
+      fs.readFile(bundlePathEN, 'utf-8', (err, content) => {
+        if (err) {
+          return done(err)
+        }
+
+        expect(content).to.not.contain('// webpackBootstrap')
         done()
       })
     })
