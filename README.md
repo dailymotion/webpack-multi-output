@@ -90,7 +90,7 @@ plugins: [
 
 ## Todo
 
-* make it work with `[name]`
+* fix main bundle detection
 * fix language detection in the filename
 * make it work with multiple entries
 

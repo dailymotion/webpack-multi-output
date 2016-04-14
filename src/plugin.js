@@ -15,7 +15,6 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   }
 
   this.assets = []
-  this.assetsToRemove = []
   this.mainBundleName = false
 }
 
@@ -93,15 +92,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
               const source = new ConcatSource(lines.join('\n'))
 
-              const filename = file.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
-                return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
-              })
-
-              compilation.assets[filename] = source
-
-              if (file !== filename) {
-                this.assetsToRemove.push(file)
-              }
+              compilation.assets[file] = source
             }
           }
         })
@@ -111,9 +102,15 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     })
 
     compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
-      // remove useless assets
-      Object.keys(assets).forEach(asset => {
-        if (this.assetsToRemove.indexOf(asset) !== -1) {
+      // change assets name if the config uses [contenthash]
+      this.assets.forEach((asset: string): void => {
+        const source = compilation.assets[asset]
+        const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
+          return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
+        })
+
+        if (filename !== asset) {
+          compilation.assets[filename] = source
           delete compilation.assets[asset]
         }
       })

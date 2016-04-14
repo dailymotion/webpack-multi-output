@@ -156,7 +156,7 @@ describe('Webpack Multi Output', () => {
           }),
           new webpack.optimize.OccurenceOrderPlugin(true),
           new webpack.optimize.UglifyJsPlugin({
-            output:{
+            output: {
               comments: false
             },
             compressor: {
@@ -252,7 +252,7 @@ describe('Webpack Multi Output', () => {
             values: ['fr', 'en'],
           }),
           new webpack.optimize.UglifyJsPlugin({
-            output:{
+            output: {
               comments: false
             },
             compressor: {
