@@ -90,8 +90,6 @@ plugins: [
 
 ## Todo
 
-* fix `[name]` support and compatibility with extract plugin using `[name]`
-* fix main bundle detection
 * fix language detection in the filename
 * make it work with multiple entries
 

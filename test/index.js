@@ -284,15 +284,16 @@ describe('Webpack Multi Output', () => {
         bundlePath = path.join(__dirname, `dist-name-hash/app-${stats.hash}.js`)
         const assets = stats.compilation.assets
 
-        // needs to be fixed
         const frName = Object.keys(assets).find(a => {
-          a.split('-')[a.split('-').length - 1] === 'fr.js'
+          const chunks = a.split('-')
+          return chunks[0] === 'app' && chunks[chunks.length - 1] === 'fr.js'
         })
         bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
 
-        const enName = Object.keys(assets).find(a => (
-          a.split('-')[a.split('-').length - 1] === 'en.js'
-        ))
+        const enName = Object.keys(assets).find(a => {
+          const chunks = a.split('-')
+          return chunks[0] === 'app' && chunks[chunks.length - 1] === 'en.js'
+        })
         bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
 
         done()

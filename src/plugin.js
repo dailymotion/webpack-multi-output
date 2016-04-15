@@ -15,6 +15,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   }
 
   this.assets = []
+  this.chunkName = ''
   this.mainBundleName = false
 }
 
@@ -48,12 +49,15 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
       let langAsset = clone(compilation.assets[this.mainBundleName])
 
-      // crap
-      // need to find the [name]
+      // fallback if the main bundle has [name]
       if (typeof langAsset === 'undefined') {
         const assets = compilation.assets
         if (Object.keys(assets).length > 1) {
-          this.mainBundleName = Object.keys(assets)[Object.keys(assets).length - 1]
+          const jsBundles = Object.keys(assets).filter(asset => {
+            return path.extname(asset) === '.js' && this.assets.indexOf(asset) === -1
+          })
+
+          this.mainBundleName = jsBundles[jsBundles.length - 1]
           langAsset = clone(assets[this.mainBundleName])
         }
         else {
@@ -67,6 +71,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       })
 
       chunks.forEach(chunk => {
+        this.chunkName = chunk.name
         if (chunk.files.indexOf(this.mainBundleName) !== -1) {
           Object.keys(compilation.assets).forEach(asset => {
             if (chunk.files.indexOf(asset) === -1) {
@@ -105,13 +110,15 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       // change assets name if the config uses [contenthash]
       this.assets.forEach((asset: string): void => {
         const source = compilation.assets[asset]
-        const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
-          return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
-        })
+        if (typeof source !== 'undefined') {
+          const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
+            return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
+          }).replace('[name]', this.chunkName)
 
-        if (filename !== asset) {
-          compilation.assets[filename] = source
-          delete compilation.assets[asset]
+          if (filename !== asset) {
+            compilation.assets[filename] = source
+            delete compilation.assets[asset]
+          }
         }
       })
 
