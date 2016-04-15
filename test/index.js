@@ -7,8 +7,8 @@ import AssetsPlugin from 'assets-webpack-plugin'
 
 import WebpackMultiOutputPlugin, {getFilePath} from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
-const compiledLoader = require('../')
-const compiledPlugin = require('../plugin')
+const compiledLoader = require('../loader')
+const compiledPlugin = require('../')
 
 import * as test from '../'
 

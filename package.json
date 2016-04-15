@@ -2,7 +2,6 @@
   "name": "webpack-multi-output",
   "version": "1.0.6",
   "description": "Webpack plugin to produce multiple bundle from one import",
-  "main": "index.js",
   "author": "Romain Berger <romain@romainberger.com>",
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
