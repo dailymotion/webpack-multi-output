@@ -97,5 +97,4 @@ plugins: [
 
 Bonus:
 
-* add check to be sure the plugin is used with the loader
 * make it work with sourcemap
