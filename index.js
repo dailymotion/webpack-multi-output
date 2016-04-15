@@ -1,1 +1,1 @@
-module.exports = require('./lib/plugin').default
+module.exports = require('./lib/loader')
