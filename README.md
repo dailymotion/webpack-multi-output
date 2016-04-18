@@ -51,6 +51,42 @@ var translations = require(`./i18n/en.i18n`)
 
 * `filename`: Filename template for the bundles that will be generated. Must contain `[value]` somewhere, default to `bundle-[value].js`. Can contain `[contenthash]`.
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
+* `assets`: See the [documentation below](#assets).
+* `debug`: Log when the plugin adds an asset. Default to `false`
+
+## Assets
+
+The [assets-webpack-plugin](https://github.com/kossnocorp/assets-webpack-plugin) doesn't really understand what we're doing here. So to replace it you have an option to get a similar json file with assets, mapped with the values:
+
+```js
+// webpack config
+new WebpackMultiOutputPlugin({
+  filename: 'bundle-[value].js',
+  values: ['en', 'fr'],
+  assets: {
+    filename: 'assets.json',
+    path: path.join(__dirname, 'dist'),
+    prettyPrint: true,
+  }
+})
+```
+
+This configuration will output:
+
+```json
+{
+  "en": {
+    "app": {
+      "js": "bundle-fr.js"
+    }
+  },
+  "en": {
+    "app": {
+      "js": "bundle-en.js"
+    }
+  }
+}
+```
 
 ## Combining with other plugins
 
@@ -87,7 +123,6 @@ plugins: [
 
 ## Todo
 
-* add an option to replace the `assets-webpack-plugin`
 * fix language detection in the filename
 * make it work with multiple entries
 

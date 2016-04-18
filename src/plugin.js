@@ -3,16 +3,27 @@
 import fs from 'fs'
 import path from 'path'
 import clone from 'lodash.clone'
+import merge from 'lodash.merge'
 import {ConcatSource} from 'webpack-sources'
 import {getHashDigest} from 'loader-utils'
 
+const baseAssets = {
+  filename: 'assets.json',
+  path: '.',
+  prettyPrint: false,
+}
+
 export default function WebpackMultiOutput(options: Object = {}): void {
-  this.options = {
-    filename: options.filename ? options.filename : 'bundle-[value].js',
-    values: options.values ? options.values : [],
-  }
+  this.options = merge({
+    filename: 'bundle-[value].js',
+    values: [],
+    debug: false,
+  }, options)
+
+  this.options.assets = typeof options.assets === 'object' ? merge(baseAssets, options.assets) : false
 
   this.assets = []
+  this.assetsMap = {}
   this.chunkName = ''
   this.mainBundleName = false
 
@@ -67,7 +78,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         if (chunk.files.indexOf(this.mainBundleName) !== -1) {
           Object.keys(compilation.assets).forEach(asset => {
             if (chunk.files.indexOf(asset) === -1) {
-              console.log(`[WebpackMultiOutput] Add asset ${asset}`)
+              this.log(`[WebpackMultiOutput] Add asset ${asset}`)
               chunk.files.push(asset)
             }
           })
@@ -110,11 +121,46 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
             compilation.assets[filename] = source
             delete compilation.assets[asset]
           }
+
+          const ext = path.extname(filename)
+          const basename = path.basename(filename, ext)
+          const value = basename.split('-')[basename.split('-').length - 1]
+
+          this.assetsMap[value] = {
+            [this.chunkName]: {
+              js: filename,
+            }
+          }
         }
       })
 
       callback()
     })
+  })
+
+  compiler.plugin('after-emit', (compilation, callback) => {
+    if (this.options.assets) {
+      Object.keys(compilation.assets).forEach(assetName => {
+        const ext = path.extname(assetName)
+        if (ext !== '.js') {
+          for (let value in this.assetsMap) {
+            this.assetsMap[value][this.chunkName][ext.replace('.', '')] = assetName
+          }
+        }
+      })
+
+      const filePath = path.join(this.options.assets.path, this.options.assets.filename)
+      const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
+
+      fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
+        if (err) {
+          console.error(err)
+        }
+        this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
+      })
+    }
+
+    callback()
   })
 }
 
@@ -141,4 +187,8 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
   }
 
   return `module.exports = ${fs.readFileSync(newResourcePath, 'utf-8')};`
+}
+
+WebpackMultiOutput.prototype.log = function(message: string): void {
+  this.options.debug && console.log(message)
 }

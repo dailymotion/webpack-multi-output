@@ -3,7 +3,6 @@ import path from 'path'
 import {expect} from 'chai'
 import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
-import AssetsPlugin from 'assets-webpack-plugin'
 
 import WebpackMultiOutputPlugin from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
@@ -170,7 +169,6 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new ExtractTextPlugin('style.css'),
-          new AssetsPlugin(),
         ],
       }
 
@@ -233,10 +231,11 @@ describe('Webpack Multi Output', () => {
     })
   })
 
-  describe('it should work with [name] and [hash] and plugins', () => {
+  describe('Plugin combining and [name], [contenthash]', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
+    const assetsPath = path.join(__dirname, 'dist-name-hash/name-hash-assets.json')
 
     before((done) => {
       const altConfig = {
@@ -265,6 +264,11 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             filename: '[name]-[contenthash]-[value].js',
             values: ['fr', 'en'],
+            assets: {
+              filename: 'name-hash-assets.json',
+              path: path.join(__dirname, 'dist-name-hash'),
+              prettyPrint: true,
+            },
           }),
           new ExtractTextPlugin('[name]-[contenthash].css'),
           new webpack.optimize.UglifyJsPlugin({
@@ -275,7 +279,6 @@ describe('Webpack Multi Output', () => {
               warnings: false
             }
           }),
-          new AssetsPlugin(),
         ],
       }
 
@@ -315,6 +318,12 @@ describe('Webpack Multi Output', () => {
       expect(bundleExists).to.be.true
       expect(bundleExistsFR).to.be.true
       expect(bundleExistsEN).to.be.true
+    })
+
+    it('should produce an asset file with all assets per language', () => {
+      const assetsExists = fs.existsSync(assetsPath)
+
+      expect(assetsExists).to.be.true
     })
 
     it('should include the appropriate content for value FR', done => {
