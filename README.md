@@ -104,6 +104,8 @@ new WebpackMultiOutputPlugin({
 })
 ```
 
+This will create a `en.json` and a `fr.json`, each one with their corresponding assets.
+
 ## Combining with other plugins
 
 Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. The plugin performs the replacement of a comment in the code, so if you're using the `UglifyJsPlugin` plugin, you will want to place it in front of it, as `UglifyJsPlugin` will probably remove comments:

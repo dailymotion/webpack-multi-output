@@ -2,6 +2,7 @@
 
 import fs from 'fs'
 import path from 'path'
+import mkdirp from 'mkdirp'
 import clone from 'lodash.clone'
 import merge from 'lodash.merge'
 import {ConcatSource} from 'webpack-sources'
@@ -140,6 +141,8 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
   compiler.plugin('after-emit', (compilation, callback) => {
     if (this.options.assets) {
+      mkdirp.sync(this.options.assets.path)
+
       Object.keys(compilation.assets).forEach(assetName => {
         const ext = path.extname(assetName)
         if (ext !== '.js') {

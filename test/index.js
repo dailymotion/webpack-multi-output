@@ -373,8 +373,8 @@ describe('Webpack Multi Output', () => {
     const bundlePathFR = path.join(__dirname, 'dist-assets-option/bundle-fr.js')
     const bundlePathEN = path.join(__dirname, 'dist-assets-option/bundle-en.js')
 
-    const assetsPathFR = path.join(__dirname, 'dist-assets-option/assets-fr.json')
-    const assetsPathEN = path.join(__dirname, 'dist-assets-option/assets-en.json')
+    const assetsPathFR = path.join(__dirname, 'dist-assets-option/assets/assets-fr.json')
+    const assetsPathEN = path.join(__dirname, 'dist-assets-option/assets/assets-en.json')
 
     before((done) => {
       const altConfig = {
@@ -390,7 +390,7 @@ describe('Webpack Multi Output', () => {
             values: ['fr', 'en'],
             assets: {
               filename: 'assets-[value].json',
-              path: path.join(__dirname, 'dist-assets-option'),
+              path: path.join(__dirname, 'dist-assets-option/assets'),
               prettyPrint: true,
             },
             debug: true,
