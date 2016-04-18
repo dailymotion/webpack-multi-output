@@ -149,15 +149,30 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         }
       })
 
-      const filePath = path.join(this.options.assets.path, this.options.assets.filename)
-      const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
+      if (/\[value\]/.test(this.options.assets.filename)) {
+        for (let value in this.assetsMap) {
+          const filePath = path.join(this.options.assets.path, this.options.assets.filename.replace('[value]', value))
+          const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap[value], null, 2) : JSON.stringify(this.assetsMap[value])
 
-      fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
-        if (err) {
-          console.error(err)
+          fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
+            if (err) {
+              console.error(err)
+            }
+            this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
+          })
         }
-        this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
-      })
+      }
+      else {
+        const filePath = path.join(this.options.assets.path, this.options.assets.filename)
+        const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
+
+        fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
+          if (err) {
+            console.error(err)
+          }
+          this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
+        })
+      }
     }
 
     callback()
@@ -180,7 +195,7 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
   const ext = path.extname(resourcePath)
   const basename = path.basename(resourcePath, ext)
 
-  let newResourcePath = path.join(resourcePath.replace(`${basename}${ext}`, ''), `${value}${ext}`)
+  let newResourcePath = resourcePath.replace(`${basename}${ext}`, `${value}${ext}`)
 
   if (!fs.existsSync(newResourcePath)) {
     newResourcePath = resourcePath

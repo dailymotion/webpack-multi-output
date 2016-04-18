@@ -88,6 +88,22 @@ This configuration will output:
 }
 ```
 
+### Multiple assets files
+
+If you need an asset file per value, just use `[value]` in the `filename` option:
+
+```js
+new WebpackMultiOutputPlugin({
+  filename: 'bundle-[value].js',
+  values: ['en', 'fr'],
+  assets {
+    filename: '[value].json',
+    path: path.join(__dirname, 'dist'),
+    prettyPrint: true,
+  }
+})
+```
+
 ## Combining with other plugins
 
 Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. The plugin performs the replacement of a comment in the code, so if you're using the `UglifyJsPlugin` plugin, you will want to place it in front of it, as `UglifyJsPlugin` will probably remove comments:
@@ -123,8 +139,9 @@ plugins: [
 
 ## Todo
 
-* fix language detection in the filename
-* make it work with multiple entries
+* fix language detection in the filename (or force the value at the end)
+* make it work with multiple entries / code splitting
+* better perfs. it's all about the perf man.
 
 Bonus:
 

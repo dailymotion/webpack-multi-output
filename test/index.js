@@ -40,7 +40,8 @@ const config = {
     }),
     new WebpackMultiOutputPlugin({
       filename: 'bundle-[value].js',
-      values: ['fr', 'en']
+      values: ['fr', 'en'],
+      debug: true,
     }),
   ],
 }
@@ -159,6 +160,7 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             filename: 'bundle-[value].js',
             values: ['fr', 'en'],
+            debug: true,
           }),
           new webpack.optimize.OccurenceOrderPlugin(true),
           new webpack.optimize.UglifyJsPlugin({
@@ -270,6 +272,7 @@ describe('Webpack Multi Output', () => {
               path: path.join(__dirname, 'dist-name-hash'),
               prettyPrint: true,
             },
+            debug: true,
           }),
           new ExtractTextPlugin('[name]-[contenthash].css'),
           new webpack.optimize.UglifyJsPlugin({
@@ -362,6 +365,68 @@ describe('Webpack Multi Output', () => {
         expect(content).to.not.contain('// webpackBootstrap')
         done()
       })
+    })
+  })
+
+  describe('Multiple asset files', () => {
+    const bundlePath = path.join(__dirname, 'dist-assets-option/bundle.js')
+    const bundlePathFR = path.join(__dirname, 'dist-assets-option/bundle-fr.js')
+    const bundlePathEN = path.join(__dirname, 'dist-assets-option/bundle-en.js')
+
+    const assetsPathFR = path.join(__dirname, 'dist-assets-option/assets-fr.json')
+    const assetsPathEN = path.join(__dirname, 'dist-assets-option/assets-en.json')
+
+    before((done) => {
+      const altConfig = {
+        ...config,
+        output: {
+          path: path.resolve(__dirname, 'dist-assets-option'),
+          filename: 'bundle.js',
+          publicPath: '/static/',
+        },
+        plugins: [
+          new WebpackMultiOutputPlugin({
+            filename: 'bundle-[value].js',
+            values: ['fr', 'en'],
+            assets: {
+              filename: 'assets-[value].json',
+              path: path.join(__dirname, 'dist-assets-option'),
+              prettyPrint: true,
+            },
+            debug: true,
+          }),
+        ]
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should produce a bundle for each value', () => {
+      const bundleExists = fs.existsSync(bundlePath)
+      const bundleExistsFR = fs.existsSync(bundlePathFR)
+      const bundleExistsEN = fs.existsSync(bundlePathEN)
+
+      expect(bundleExists).to.be.true
+      expect(bundleExistsFR).to.be.true
+      expect(bundleExistsEN).to.be.true
+    })
+
+    it('should create an asset file for each value', () => {
+      const assetsExistsFR = fs.existsSync(assetsPathFR)
+      const assetsExistsEN = fs.existsSync(assetsPathEN)
+
+      expect(assetsExistsFR).to.be.true
+      expect(assetsExistsEN).to.be.true
     })
   })
 })
