@@ -6,8 +6,6 @@ import clone from 'lodash.clone'
 import {ConcatSource} from 'webpack-sources'
 import {getHashDigest} from 'loader-utils'
 
-const re = /\[WebpackMultiOutput\]/
-
 export default function WebpackMultiOutput(options: Object = {}): void {
   this.options = {
     filename: options.filename ? options.filename : 'bundle-[value].js',
@@ -17,13 +15,8 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   this.assets = []
   this.chunkName = ''
   this.mainBundleName = false
-}
 
-export function getFilePath(string: string): string {
-  const filePathRe = /\[WebpackMultiOutput\] (.*?) \[WebpackMultiOutput\]/
-  const match = string.match(filePathRe)
-
-  return match ? match[1] : ''
+  this.re = /\[WebpackMultiOutput\]/
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
@@ -36,7 +29,6 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
             const filename = this.options.filename.replace('[value]', value)
             this.assets.push(filename)
             compilation.assets[filename] = new ConcatSource('/* WebpackMultiOutput */')
-            compilation.assets[filename].__value__ = value
           })
         }
       }
@@ -107,7 +99,6 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     })
 
     compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
-      // change assets name if the config uses [contenthash]
       this.assets.forEach((asset: string): void => {
         const source = compilation.assets[asset]
         if (typeof source !== 'undefined') {
@@ -127,17 +118,23 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   })
 }
 
+WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
+  const filePathRe = /\[WebpackMultiOutput\] (.*?) \[WebpackMultiOutput\]/
+  const match = string.match(filePathRe)
+
+  return match ? match[1] : ''
+}
+
 WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string): string {
-  if (!re.test(source)) {
+  if (!this.re.test(source)) {
     return source
   }
 
-  const resourcePath = getFilePath(source)
-  const basename = path.basename(resourcePath)
-  const ext = path.extname(basename)
-  const language = basename.replace(ext, '')
+  const resourcePath = this.getFilePath(source)
+  const ext = path.extname(resourcePath)
+  const basename = path.basename(resourcePath, ext)
 
-  let newResourcePath = path.join(resourcePath.replace(basename, ''), `${value}${ext}`)
+  let newResourcePath = path.join(resourcePath.replace(`${basename}${ext}`, ''), `${value}${ext}`)
 
   if (!fs.existsSync(newResourcePath)) {
     newResourcePath = resourcePath

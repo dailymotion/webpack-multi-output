@@ -1,8 +1,6 @@
 # Webpack Multi Output [![Build Status](https://travis-ci.com/dailymotion/webpack-multi-output.svg?token=BQpiDRDdVVk7MYBpasVF&branch=master)](https://travis-ci.com/dailymotion/webpack-multi-output)
 
-**Work in progress** Experimental, not really production ready. Use at your own risk. Check out [the todo list](#todo) to see what's missing.
-
-Allows the creation of multiple bundles with one configuration. Kinda like the [multi-compiler](https://github.com/webpack/webpack/tree/master/examples/multi-compiler) but where it concerns imports of a specific file extension.
+Allows the creation of multiple bundles with one configuration. Kinda like the [multi-compiler](https://github.com/webpack/webpack/tree/master/examples/multi-compiler) but where it concerns imports of a specific file extension. And obviously this module gives you crazy performance and will reduce your bundling time compared to the multi-compiler.
 
 ## Installation
 
@@ -86,10 +84,10 @@ plugins: [
 * `OccurenceOrderPlugin`
 * `UglifyJsPlugin`
 * `extract-text-webpack-plugin`
-* `assets-webpack-plugin`
 
 ## Todo
 
+* add an option to replace the `assets-webpack-plugin`
 * fix language detection in the filename
 * make it work with multiple entries
 

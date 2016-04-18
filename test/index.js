@@ -5,7 +5,7 @@ import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
 import AssetsPlugin from 'assets-webpack-plugin'
 
-import WebpackMultiOutputPlugin, {getFilePath} from '../src/plugin'
+import WebpackMultiOutputPlugin from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
 const compiledLoader = require('../')
 const compiledPlugin = require('../plugin')
@@ -60,12 +60,18 @@ describe('Webpack Multi Output', () => {
   })
 
   describe('Plugin regex checker', () => {
+    let instance
+
+    before(() => {
+      instance = new WebpackMultiOutputPlugin({})
+    })
+
     it('should export a function', () => {
-      expect(getFilePath).to.be.a('function')
+      expect(instance.getFilePath).to.be.a('function')
     })
 
     it('should return the filename', () => {
-      expect(getFilePath('/* [WebpackMultiOutput] /path/to/file.js [WebpackMultiOutput] */')).to.equal('/path/to/file.js')
+      expect(instance.getFilePath('/* [WebpackMultiOutput] /path/to/file.js [WebpackMultiOutput] */')).to.equal('/path/to/file.js')
     })
   })
 
@@ -269,6 +275,7 @@ describe('Webpack Multi Output', () => {
               warnings: false
             }
           }),
+          new AssetsPlugin(),
         ],
       }
 
