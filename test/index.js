@@ -132,7 +132,8 @@ describe('Webpack Multi Output', () => {
     const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/bundle-fr.js')
     const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/bundle-en.js')
 
-    before((done) => {
+    before(function(done) {
+      this.timeout(4000)
       const altConfig = {
         ...config,
         context: path.join(__dirname, '..'),
@@ -322,8 +323,12 @@ describe('Webpack Multi Output', () => {
 
     it('should produce an asset file with all assets per language', () => {
       const assetsExists = fs.existsSync(assetsPath)
+      const assets = require(assetsPath)
 
       expect(assetsExists).to.be.true
+      expect(assets).to.have.all.keys(['fr', 'en'])
+      expect(assets.fr).to.have.all.keys(['app'])
+      expect(assets.fr.app).to.have.all.keys(['js', 'css'])
     })
 
     it('should include the appropriate content for value FR', done => {

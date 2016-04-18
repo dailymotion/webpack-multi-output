@@ -92,7 +92,7 @@ This configuration will output:
 
 Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. The plugin performs the replacement of a comment in the code, so if you're using the `UglifyJsPlugin` plugin, you will want to place it in front of it, as `UglifyJsPlugin` will probably remove comments:
 
-```
+```js
 // ...
 plugins: [
   // the define plugin will probably be in front
