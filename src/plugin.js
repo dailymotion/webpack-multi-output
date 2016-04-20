@@ -20,6 +20,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
     filename: 'bundle-[value].js',
     values: [],
     debug: false,
+    ultraDebug: false
   }, options)
 
   this.options.assets = typeof options.assets === 'object' ? merge(baseAssets, options.assets) : false
@@ -83,7 +84,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         if (chunk.files.indexOf(this.mainBundleName) !== -1) {
           Object.keys(compilation.assets).forEach(asset => {
             if (chunk.files.indexOf(asset) === -1) {
-              this.log(`[WebpackMultiOutput] Add asset ${asset}`)
+              this.log(`Add asset ${asset}`)
               chunk.files.push(asset)
             }
           })
@@ -91,19 +92,21 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
         forEachOfLimit(chunk.files, 5, (file: string, k: number, cb: Function) => {
           if (this.assets.indexOf(file) === -1) {
+            this.log(`Ignore ${file} - not our asset`, 'ultra')
             return asyncSetImmediate(cb)
           }
 
-          const _source = new ConcatSource(compilation.assets[file])
           // crap
           const _parts = path.basename(file).replace(path.extname(file), '').split('-')
           const _value = _parts[_parts.length - 1]
 
           if (!_value) {
+            this.log(`Ignore ${file} - no language`, 'ultra')
             return asyncSetImmediate(cb)
           }
 
-          let lines = _source.source().split('\n')
+          const _source = new ConcatSource(compilation.assets[file])
+          const lines = _source.source().split('\n')
 
           mapLimit(lines, 20, (line: string, mapCb: Function) => {
             this.replaceContent(line, _value, (err, result) => {
@@ -118,6 +121,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         }, () => {
           _cd++
 
+          this.log(`Done replacing`, 'ultra')
           _cd === _c && callback()
         })
       })
@@ -129,6 +133,8 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         if (typeof source === 'undefined') {
           return asyncSetImmediate(cb)
         }
+
+        this.log(`Renaming asset ${asset}`, 'ultra')
 
         const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
           return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
@@ -178,7 +184,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap[value], null, 2) : JSON.stringify(this.assetsMap[value])
 
         fs.writeFileSync(filePath, content, {flag: 'w'})
-        this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
+        this.log(`Asset file ${filePath} written`)
       }
     }
     else {
@@ -186,7 +192,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
 
       fs.writeFileSync(filePath, content, {flag: 'w'})
-      this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
+      this.log(`Asset file ${filePath} written`)
     }
 
     callback()
@@ -218,6 +224,7 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
       newResourcePath = resourcePath
     }
 
+    this.log(`Replacing content for ${newResourcePath}`, 'ultra')
     fs.readFile(newResourcePath, 'utf-8', (err, content) => {
       if (err) {
         console.error(err)
@@ -229,6 +236,10 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
   })
 }
 
-WebpackMultiOutput.prototype.log = function(message: string): void {
-  this.options.debug && console.log(message)
+WebpackMultiOutput.prototype.log = function(message: string, level: string = 'debug'): void {
+  if (level === 'ultra') {
+    return this.options.ultraDebug && console.log(`[WebpackMultiOutput] ${+new Date} - ${message}`)
+  }
+
+  this.options.debug && console.log(`[WebpackMultiOutput] ${message}`)
 }

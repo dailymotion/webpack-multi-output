@@ -53,6 +53,7 @@ var translations = require(`./i18n/en.i18n`)
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 * `assets`: See the [documentation below](#assets).
 * `debug`: Log when the plugin adds an asset. Default to `false`
+* `ultraDebug`: Like debug, but with waaaaaaay more shit. Default to `false`
 
 ## Assets
 
