@@ -7,6 +7,7 @@ import clone from 'lodash.clone'
 import merge from 'lodash.merge'
 import {ConcatSource} from 'webpack-sources'
 import {getHashDigest} from 'loader-utils'
+import {forEachOf, map} from 'async'
 
 const baseAssets = {
   filename: 'assets.json',
@@ -74,6 +75,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         compilation.assets[asset] = langAsset
       })
 
+      const _c = chunks.length
+      let _cd = 0
+
       chunks.forEach(chunk => {
         this.chunkName = chunk.name
         if (chunk.files.indexOf(this.mainBundleName) !== -1) {
@@ -85,97 +89,104 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           })
         }
 
-        chunk.files.forEach(file => {
-          if (this.assets.indexOf(file) !== -1) {
-            const _source = new ConcatSource(compilation.assets[file])
-            // crap
-            const _parts = path.basename(file).replace(path.extname(file), '').split('-')
-            const _value = _parts[_parts.length - 1]
-
-            if (_value) {
-              let lines = _source.source().split('\n')
-
-              lines = lines.map(line => {
-                return this.replaceContent(line, _value)
-              })
-
-              const source = new ConcatSource(lines.join('\n'))
-
-              compilation.assets[file] = source
-            }
+        forEachOf(chunk.files, (file: string, k: number, cb: Function) => {
+          if (this.assets.indexOf(file) === -1) {
+            return cb()
           }
+
+          const _source = new ConcatSource(compilation.assets[file])
+          // crap
+          const _parts = path.basename(file).replace(path.extname(file), '').split('-')
+          const _value = _parts[_parts.length - 1]
+
+          if (!_value) {
+            return cb()
+          }
+
+          let lines = _source.source().split('\n')
+
+          map(lines, (line: string, mapCb: Function) => {
+            this.replaceContent(line, _value, (err, result) => {
+              mapCb(err, result)
+            })
+          }, (err, resultLines) => {
+            const source = new ConcatSource(resultLines.join('\n'))
+
+            compilation.assets[file] = source
+            cb()
+          })
+        }, () => {
+          _cd++
+
+          _cd === _c && callback()
         })
       })
-
-      callback()
     })
 
     compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
-      this.assets.forEach((asset: string): void => {
+      forEachOf(this.assets, (asset: string, k: number, cb: Function) => {
         const source = compilation.assets[asset]
-        if (typeof source !== 'undefined') {
-          const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
-            return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
-          }).replace('[name]', this.chunkName)
+        if (typeof source === 'undefined') {
+          return cb()
+        }
 
-          if (filename !== asset) {
-            compilation.assets[filename] = source
-            delete compilation.assets[asset]
-          }
+        const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
+          return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
+        }).replace('[name]', this.chunkName)
 
-          const ext = path.extname(filename)
-          const basename = path.basename(filename, ext)
-          const value = basename.split('-')[basename.split('-').length - 1]
+        if (filename !== asset) {
+          compilation.assets[filename] = source
+          delete compilation.assets[asset]
+        }
 
-          this.assetsMap[value] = {
-            [this.chunkName]: {
-              js: filename,
-            }
+        const ext = path.extname(filename)
+        const basename = path.basename(filename, ext)
+        const value = basename.split('-')[basename.split('-').length - 1]
+
+        this.assetsMap[value] = {
+          [this.chunkName]: {
+            js: filename,
           }
         }
-      })
 
-      callback()
+        cb()
+      }, () => {
+        callback()
+      })
     })
   })
 
   compiler.plugin('after-emit', (compilation, callback) => {
-    if (this.options.assets) {
-      mkdirp.sync(this.options.assets.path)
+    if (!this.options.assets) {
+      return callback()
+    }
 
-      Object.keys(compilation.assets).forEach(assetName => {
-        const ext = path.extname(assetName)
-        if (ext !== '.js') {
-          for (let value in this.assetsMap) {
-            this.assetsMap[value][this.chunkName][ext.replace('.', '')] = assetName
-          }
-        }
-      })
+    mkdirp.sync(this.options.assets.path)
 
-      if (/\[value\]/.test(this.options.assets.filename)) {
+    Object.keys(compilation.assets).forEach(assetName => {
+      const ext = path.extname(assetName)
+      if (ext !== '.js') {
         for (let value in this.assetsMap) {
-          const filePath = path.join(this.options.assets.path, this.options.assets.filename.replace('[value]', value))
-          const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap[value], null, 2) : JSON.stringify(this.assetsMap[value])
-
-          fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
-            if (err) {
-              console.error(err)
-            }
-            this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
-          })
+          this.assetsMap[value][this.chunkName][ext.replace('.', '')] = assetName
         }
       }
-      else {
-        const filePath = path.join(this.options.assets.path, this.options.assets.filename)
-        const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
+    })
 
-        fs.writeFile(filePath, content, {flag: 'w'}, (err) => {
-          if (err) {
-            console.error(err)
-          }
-          this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
-        })
+    if (/\[value\]/.test(this.options.assets.filename)) {
+      for (let value in this.assetsMap) {
+        const filePath = path.join(this.options.assets.path, this.options.assets.filename.replace('[value]', value))
+        const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap[value], null, 2) : JSON.stringify(this.assetsMap[value])
+
+        fs.writeFileSync(filePath, content, {flag: 'w'})
+        this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
       }
+    }
+    else {
+      const filePath = path.join(this.options.assets.path, this.options.assets.filename)
+      const content = this.options.assets.prettyPrint ? JSON.stringify(this.assetsMap, null, 2) : JSON.stringify(this.assetsMap)
+
+      fs.writeFileSync(filePath, content, {flag: 'w'})
+      this.log(`[WebpackMultiOutput] Asset file ${filePath} written`)
     }
 
     callback()
@@ -189,9 +200,9 @@ WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
   return match ? match[1] : ''
 }
 
-WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string): string {
+WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): string {
   if (!this.re.test(source)) {
-    return source
+    return callback(null, source)
   }
 
   const resourcePath = this.getFilePath(source)
@@ -200,11 +211,20 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
 
   let newResourcePath = resourcePath.replace(`${basename}${ext}`, `${value}${ext}`)
 
-  if (!fs.existsSync(newResourcePath)) {
-    newResourcePath = resourcePath
-  }
+  fs.exists(newResourcePath, (exists) => {
+    if (!exists) {
+      newResourcePath = resourcePath
+    }
 
-  return `module.exports = ${fs.readFileSync(newResourcePath, 'utf-8')};`
+    fs.readFile(newResourcePath, 'utf-8', (err, content) => {
+      if (err) {
+        console.error(err)
+        callback(err)
+      }
+
+      callback(null, `module.exports = ${content};`)
+    })
+  })
 }
 
 WebpackMultiOutput.prototype.log = function(message: string): void {
