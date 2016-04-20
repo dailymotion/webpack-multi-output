@@ -52,7 +52,7 @@ var translations = require(`./i18n/en.i18n`)
 * `filename`: Filename template for the bundles that will be generated. Must contain `[value]` somewhere, default to `bundle-[value].js`. Can contain `[contenthash]`.
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 * `assets`: See the [documentation below](#assets).
-* `uglify`: If you're using this module for json, enable this option to minify it. See [Combining with other plugins](#combining-with-other-plugins) for more informations.
+* `uglify`: If you're using this module for json, enable this option to minify it. See [Uglify](#uglify) for more informations.
 * `debug`: Log when the plugin adds an asset. Default to `false`
 * `ultraDebug`: Like debug, but with waaaaaaay more shit. Default to `false`
 
@@ -108,13 +108,13 @@ new WebpackMultiOutputPlugin({
 
 This will create a `en.json` and a `fr.json`, each one with their corresponding assets.
 
-## Combining with other plugins
+## Uglify
 
 Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. 
 
-The plugin performs a replacement in the code. If you want to use the Uglify plugin in parallel **and** the files you are requiring are json, you can use the `uglify` option so the json content will be minified.
+The plugin performs a replacement in the code. If you want to use the Uglify plugin in parallel **and** the files you are requiring are json, you can use the `uglify` option so the json content will be minified. This will give you a huge perf boost when bundling as uglify will run only once.
 
-If you are not using `webpack-multi-output` to require json, make sure to use the Uglify plugin **after** so the code replaced will be minified.
+If you are not using `webpack-multi-output` to require something else than json, make sure to use the Uglify plugin **after** so the code replaced will be minified.
 
 ```js
 // ...
