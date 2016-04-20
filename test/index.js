@@ -429,4 +429,65 @@ describe('Webpack Multi Output', () => {
       expect(assetsExistsEN).to.be.true
     })
   })
+
+  describe('Call stack test', () => {
+    const languages = [
+      'ar',
+      'de',
+      'el',
+      'en',
+      'en_GB',
+      'en_US',
+      'es',
+      'fr',
+      'id',
+      'it',
+      'ja',
+      'ko',
+      'ms',
+      'nl',
+      'pl',
+      'pt_BR',
+      'ro',
+      'ru',
+      'th',
+      'tr',
+      'vi',
+      'zh',
+      'zh_TW',
+    ]
+
+    it('should not crash', (done) => {
+      const altConfig = {
+        ...config,
+        output: {
+          path: path.resolve(__dirname, 'dist-call-stack'),
+          filename: 'bundle.js',
+          publicPath: '/static/',
+        },
+        plugins: [
+          new webpack.DefinePlugin({
+            __LOCALE__: `'fr'`,
+          }),
+          new WebpackMultiOutputPlugin({
+            filename: 'bundle-[value].js',
+            values: languages,
+            debug: true,
+          }),
+        ]
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+  })
 })

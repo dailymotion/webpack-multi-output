@@ -7,7 +7,7 @@ import clone from 'lodash.clone'
 import merge from 'lodash.merge'
 import {ConcatSource} from 'webpack-sources'
 import {getHashDigest} from 'loader-utils'
-import {forEachOf, map} from 'async'
+import {forEachOfLimit, mapLimit, setImmediate as asyncSetImmediate} from 'async'
 
 const baseAssets = {
   filename: 'assets.json',
@@ -89,9 +89,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           })
         }
 
-        forEachOf(chunk.files, (file: string, k: number, cb: Function) => {
+        forEachOfLimit(chunk.files, 5, (file: string, k: number, cb: Function) => {
           if (this.assets.indexOf(file) === -1) {
-            return cb()
+            return asyncSetImmediate(cb)
           }
 
           const _source = new ConcatSource(compilation.assets[file])
@@ -100,12 +100,12 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           const _value = _parts[_parts.length - 1]
 
           if (!_value) {
-            return cb()
+            return asyncSetImmediate(cb)
           }
 
           let lines = _source.source().split('\n')
 
-          map(lines, (line: string, mapCb: Function) => {
+          mapLimit(lines, 20, (line: string, mapCb: Function) => {
             this.replaceContent(line, _value, (err, result) => {
               mapCb(err, result)
             })
@@ -124,10 +124,10 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     })
 
     compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
-      forEachOf(this.assets, (asset: string, k: number, cb: Function) => {
+      forEachOfLimit(this.assets, 20, (asset: string, k: number, cb: Function) => {
         const source = compilation.assets[asset]
         if (typeof source === 'undefined') {
-          return cb()
+          return asyncSetImmediate(cb)
         }
 
         const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
@@ -202,7 +202,9 @@ WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
 
 WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): void {
   if (!this.re.test(source)) {
-    return callback(null, source)
+    return asyncSetImmediate(() => {
+      callback(null, source)
+    })
   }
 
   const resourcePath = this.getFilePath(source)
