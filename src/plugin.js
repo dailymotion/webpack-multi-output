@@ -200,7 +200,7 @@ WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
   return match ? match[1] : ''
 }
 
-WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): string {
+WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): void {
   if (!this.re.test(source)) {
     return callback(null, source)
   }
