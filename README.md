@@ -52,6 +52,7 @@ var translations = require(`./i18n/en.i18n`)
 * `filename`: Filename template for the bundles that will be generated. Must contain `[value]` somewhere, default to `bundle-[value].js`. Can contain `[contenthash]`.
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 * `assets`: See the [documentation below](#assets).
+* `uglify`: If you're using this module for json, enable this option to minify it. See [Combining with other plugins](#combining-with-other-plugins) for more informations.
 * `debug`: Log when the plugin adds an asset. Default to `false`
 * `ultraDebug`: Like debug, but with waaaaaaay more shit. Default to `false`
 
@@ -109,7 +110,11 @@ This will create a `en.json` and a `fr.json`, each one with their corresponding 
 
 ## Combining with other plugins
 
-Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. The plugin performs the replacement of a comment in the code, so if you're using the `UglifyJsPlugin` plugin, you will want to place it in front of it, as `UglifyJsPlugin` will probably remove comments:
+Depending on the plugins you want to use in parallel, be carefull where the order of your plugins in your configuration. 
+
+The plugin performs a replacement in the code. If you want to use the Uglify plugin in parallel **and** the files you are requiring are json, you can use the `uglify` option so the json content will be minified.
+
+If you are not using `webpack-multi-output` to require json, make sure to use the Uglify plugin **after** so the code replaced will be minified.
 
 ```js
 // ...
@@ -118,10 +123,6 @@ plugins: [
   new webpack.DefinePlugin({
     __DEV__: process.env.NODE_ENV == 'dev',
   }),
-  new WebpackMultiOutputPlugin({
-    values: ['en', 'fr', 'es']
-  }),
-  // uglify should be after as it removes comments
   new webpack.optimize.UglifyJsPlugin({
     output:{
       comments: false
@@ -129,6 +130,10 @@ plugins: [
     compressor: {
       warnings: false
     }
+  }),
+  new WebpackMultiOutputPlugin({
+    values: ['en', 'fr', 'es'],
+    uglify: true,
   }),
 ]
 ```
@@ -149,3 +154,7 @@ plugins: [
 Bonus:
 
 * make it work with sourcemap
+
+Experiments:
+
+* try a mode where the plugin would run after uglify, so uglify wouldn't take forever. We need to use something in the loader that won't be removed.

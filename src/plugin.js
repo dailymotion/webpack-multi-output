@@ -20,7 +20,8 @@ export default function WebpackMultiOutput(options: Object = {}): void {
     filename: 'bundle-[value].js',
     values: [],
     debug: false,
-    ultraDebug: false
+    ultraDebug: false,
+    uglify: false,
   }, options)
 
   this.options.assets = typeof options.assets === 'object' ? merge(baseAssets, options.assets) : false
@@ -30,7 +31,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   this.chunkName = ''
   this.mainBundleName = false
 
-  this.re = /\[WebpackMultiOutput\]/
+  this.re = /WebpackMultiOutput-/
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
@@ -200,7 +201,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 }
 
 WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
-  const filePathRe = /\[WebpackMultiOutput\] (.*?) \[WebpackMultiOutput\]/
+  const filePathRe = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/
   const match = string.match(filePathRe)
 
   return match ? match[1] : ''
@@ -231,9 +232,19 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
         callback(err)
       }
 
-      callback(null, `module.exports = ${content};`)
+      if (this.options.uglify) {
+        content = this.uglify(content)
+      }
+
+      source = source.replace(`"WebpackMultiOutput-${resourcePath}-WebpackMultiOutput"`, content)
+
+      callback(null, source)
     })
   })
+}
+
+WebpackMultiOutput.prototype.uglify = function(source: string): string {
+  return JSON.stringify(JSON.parse(source))
 }
 
 WebpackMultiOutput.prototype.log = function(message: string, level: string = 'debug'): void {

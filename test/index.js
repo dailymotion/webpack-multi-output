@@ -71,7 +71,7 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should return the filename', () => {
-      expect(instance.getFilePath('/* [WebpackMultiOutput] /path/to/file.js [WebpackMultiOutput] */')).to.equal('/path/to/file.js')
+      expect(instance.getFilePath('module.exports = "WebpackMultiOutput-/path/to/file.js-WebpackMultiOutput";')).to.equal('/path/to/file.js')
     })
   })
 
@@ -157,11 +157,6 @@ describe('Webpack Multi Output', () => {
           new webpack.DefinePlugin({
             __LOCALE__: `'fr'`,
           }),
-          new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
-            values: ['fr', 'en'],
-            debug: true,
-          }),
           new webpack.optimize.OccurenceOrderPlugin(true),
           new webpack.optimize.UglifyJsPlugin({
             output: {
@@ -170,6 +165,12 @@ describe('Webpack Multi Output', () => {
             compressor: {
               warnings: false
             }
+          }),
+          new WebpackMultiOutputPlugin({
+            filename: 'bundle-[value].js',
+            values: ['fr', 'en'],
+            debug: true,
+            uglify: true,
           }),
           new ExtractTextPlugin('style.css'),
         ],
@@ -264,16 +265,6 @@ describe('Webpack Multi Output', () => {
           new webpack.DefinePlugin({
             __LOCALE__: `'fr'`,
           }),
-          new WebpackMultiOutputPlugin({
-            filename: '[name]-[contenthash]-[value].js',
-            values: ['fr', 'en'],
-            assets: {
-              filename: 'name-hash-assets.json',
-              path: path.join(__dirname, 'dist-name-hash'),
-              prettyPrint: true,
-            },
-            debug: true,
-          }),
           new ExtractTextPlugin('[name]-[contenthash].css'),
           new webpack.optimize.UglifyJsPlugin({
             output: {
@@ -282,6 +273,17 @@ describe('Webpack Multi Output', () => {
             compressor: {
               warnings: false
             }
+          }),
+          new WebpackMultiOutputPlugin({
+            filename: '[name]-[contenthash]-[value].js',
+            values: ['fr', 'en'],
+            assets: {
+              filename: 'name-hash-assets.json',
+              path: path.join(__dirname, 'dist-name-hash'),
+              prettyPrint: true,
+            },
+            uglify: true,
+            debug: true,
           }),
         ],
       }

@@ -6,5 +6,5 @@ refer to https://github.com/dailymotion/webpack-multi-output for the usage examp
   }
   this._compilation.__webpackMultiOutput.addAssets()
 
-  return `/* [WebpackMultiOutput] ${this.resourcePath} [WebpackMultiOutput] */`
+  return `exports.default = "WebpackMultiOutput-${this.resourcePath}-WebpackMultiOutput";`
 }
