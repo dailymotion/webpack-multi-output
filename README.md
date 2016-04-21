@@ -149,12 +149,7 @@ plugins: [
 
 * fix language detection in the filename (or force the value at the end)
 * make it work with multiple entries / code splitting
-* better perfs. it's all about the perf man.
 
 Bonus:
 
 * make it work with sourcemap
-
-Experiments:
-
-* try a mode where the plugin would run after uglify, so uglify wouldn't take forever. We need to use something in the loader that won't be removed.
