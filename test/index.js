@@ -235,7 +235,7 @@ describe('Webpack Multi Output', () => {
     })
   })
 
-  describe('Plugin combining and [name], [contenthash]', () => {
+  describe('Plugin combining and [name], [contenthash], and [value] in the middle', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
@@ -275,7 +275,7 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new WebpackMultiOutputPlugin({
-            filename: '[name]-[contenthash]-[value].js',
+            filename: '[name]-[value]-[contenthash].js',
             values: ['fr', 'en'],
             assets: {
               filename: 'name-hash-assets.json',
@@ -302,13 +302,13 @@ describe('Webpack Multi Output', () => {
 
         const frName = Object.keys(assets).find(a => {
           const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 1] === 'fr.js'
+          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'fr'
         })
         bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
 
         const enName = Object.keys(assets).find(a => {
           const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 1] === 'en.js'
+          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'en'
         })
         bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
 

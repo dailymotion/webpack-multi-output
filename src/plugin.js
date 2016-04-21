@@ -28,6 +28,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 
   this.assets = []
   this.assetsMap = {}
+  this.assetsValue = {}
   this.chunkName = ''
   this.mainBundleName = false
 
@@ -43,6 +44,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           this.options.values.forEach(value => {
             const filename = this.options.filename.replace('[value]', value)
             this.assets.push(filename)
+            this.assetsValue[filename] = value
             compilation.assets[filename] = new ConcatSource('/* WebpackMultiOutput */')
           })
         }
@@ -97,15 +99,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
             return asyncSetImmediate(cb)
           }
 
-          // crap
-          const _parts = path.basename(file).replace(path.extname(file), '').split('-')
-          const _value = _parts[_parts.length - 1]
-
-          if (!_value) {
-            this.log(`Ignore ${file} - no language`, 'ultra')
-            return asyncSetImmediate(cb)
-          }
-
+          const _value = this.assetsValue[file]
           const _source = new ConcatSource(compilation.assets[file])
           const lines = _source.source().split('\n')
 
@@ -146,9 +140,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           delete compilation.assets[asset]
         }
 
-        const ext = path.extname(filename)
-        const basename = path.basename(filename, ext)
-        const value = basename.split('-')[basename.split('-').length - 1]
+        const value = this.assetsValue[asset]
 
         this.assetsMap[value] = {
           [this.chunkName]: {
@@ -157,9 +149,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         }
 
         cb()
-      }, () => {
-        callback()
-      })
+      }, callback)
     })
   })
 

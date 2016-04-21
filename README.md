@@ -38,14 +38,14 @@ module.exports = {
 }
 ```
 
-This will produce a `bundle.js` and a bundle for each value given to the plugin (`bundle_[value].js`). The imported file will be replaced by a file with the filename changed to the value. Example because this sentence is not clear at all:
+This will produce a `bundle.js` and a bundle for each value given to the plugin (`bundle-[value].js`). The imported file will be replaced by a file with the filename changed to the value. Example because this sentence is not clear at all:
 
 ```js
-// this import
+// your code
 var translations = require(`./i18n/en.i18n`)
-
-// will be transformed in the content of `./i18n/fr.i18n` for bundle_fr.js
 ```
+
+With the configuration above, this will produce three bundles: `bundle-en.js` with `translations` being the content of `./i18n/en.i18n`, `bundle-fr.js` with the content of `./i18n/fr.i18n` and `bundle-es.js` with the content of `./i18n/es.i18n`.
 
 ## Options
 
@@ -147,7 +147,6 @@ plugins: [
 
 ## Todo
 
-* fix language detection in the filename (or force the value at the end)
 * make it work with multiple entries / code splitting
 
 Bonus:
