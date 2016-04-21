@@ -239,6 +239,8 @@ describe('Webpack Multi Output', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
+    let bundlePathName
+    let bundleCSSPathName
     const assetsPath = path.join(__dirname, 'dist-name-hash/name-hash-assets.json')
 
     before((done) => {
@@ -310,7 +312,10 @@ describe('Webpack Multi Output', () => {
           const chunks = a.split('-')
           return chunks[0] === 'app' && chunks[chunks.length - 2] === 'en'
         })
+        bundlePathName = enName
         bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
+
+        bundleCSSPathName = Object.keys(assets).find(a => path.extname(a) === '.css')
 
         done()
       })
@@ -334,6 +339,13 @@ describe('Webpack Multi Output', () => {
       expect(assets).to.have.all.keys(['fr', 'en'])
       expect(assets.fr).to.have.all.keys(['app'])
       expect(assets.fr.app).to.have.all.keys(['js', 'css'])
+    })
+
+    it('should contain the complete path for assets in the asset file', () => {
+      const assets = require(assetsPath)
+
+      expect(assets.en.app.js).to.equal(`/static/${bundlePathName}`)
+      expect(assets.en.app.css).to.equal(`/static/${bundleCSSPathName}`)
     })
 
     it('should include the appropriate content for value FR', done => {

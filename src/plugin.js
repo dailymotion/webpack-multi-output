@@ -144,7 +144,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
         this.assetsMap[value] = {
           [this.chunkName]: {
-            js: filename,
+            js: `${compilation.outputOptions.publicPath}${filename}`,
           }
         }
 
@@ -164,7 +164,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       const ext = path.extname(assetName)
       if (ext !== '.js') {
         for (let value in this.assetsMap) {
-          this.assetsMap[value][this.chunkName][ext.replace('.', '')] = assetName
+          this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
         }
       }
     })
