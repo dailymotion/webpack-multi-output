@@ -484,7 +484,7 @@ describe('Webpack Multi Output', () => {
             __LOCALE__: `'fr'`,
           }),
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
+            filename: '[name]-[value].[contenthash].js',
             values: languages,
             debug: true,
           }),
