@@ -27,7 +27,8 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 
   this.assetsMap = {}
   this.chunkName = ''
-  this.re = /WebpackMultiOutput-/
+  this.filePathRe = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/
+  this.filePathReG = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/g
 }
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
@@ -112,37 +113,30 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 }
 
 WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
-  const filePathRe = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/
-  const match = string.match(filePathRe)
+  const match = string.match(this.filePathRe)
 
   return match ? match[1] : ''
 }
 
 WebpackMultiOutput.prototype.processSource = function(value: string, source: Object, callback: Function): void {
-  const lines = source.source().split('\n')
+  let string = source.source()
+  const replaces = []
+  const matches = string.match(this.filePathReG)
 
-  mapLimit(lines, 20, (line: string, mapCb: Function) => {
-    // Holy shit this feels so wrong.
-    // this patches the require.ensure asset paths with the current value
-    // so a xx.bundle.js loads a xx.[id].bundle.js
-    line = line.replace('script.src = __webpack_require__.p', `script.src = __webpack_require__.p + "${value}."`)
-
-    this.replaceContent(line, value, (err, result) => {
-      mapCb(err, result)
+  forEachOfLimit(matches, 10, (match: string, k: number, cb: Function): void => {
+    this.replaceContent(match, value, (err, result) => {
+      replaces.push({source: match, replace: result})
+      cb()
     })
-  }, (err, resultLines) => {
-    const source = new ConcatSource(resultLines.join('\n'))
-    callback(source)
+  }, () => {
+    replaces.forEach(replace => {
+      string = string.replace(`"${replace.source}"`, replace.replace)
+    })
+    callback(new ConcatSource(string))
   })
 }
 
 WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): void {
-  if (!this.re.test(source)) {
-    return asyncSetImmediate(() => {
-      callback(null, source)
-    })
-  }
-
   const resourcePath = this.getFilePath(source)
   const ext = path.extname(resourcePath)
   const basename = path.basename(resourcePath, ext)
@@ -165,9 +159,7 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
         content = this.uglify(content)
       }
 
-      source = source.replace(`"WebpackMultiOutput-${resourcePath}-WebpackMultiOutput"`, content)
-
-      callback(null, source)
+      callback(null, content)
     })
   })
 }
