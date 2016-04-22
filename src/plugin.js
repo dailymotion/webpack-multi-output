@@ -25,15 +25,10 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 
   this.options.assets = typeof options.assets === 'object' ? merge(baseAssets, options.assets) : false
 
-  this.assets = []
   this.assetsMap = {}
-  this.assetsValue = {}
   this.chunkName = ''
-  this.mainBundleName = false
-
   this.re = /WebpackMultiOutput-/
 }
-
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
     compilation.__webpackMultiOutput = true
@@ -44,11 +39,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
       forEachOfLimit(chunks, 5, (chunk: Object, y: number, chunkCallback: Function) => {
-        // crappppppp
-        this.chunkName = chunk.name
         forEachOfLimit(chunk.files, 5, (file: string, k: number, fileCallback: Function) => {
           if (path.extname(file) !== '.js') {
-            return fileCallback()
+            return asyncSetImmediate(fileCallback)
           }
 
           let _v = 0
@@ -61,9 +54,12 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
             this.processSource(value, clone(source), (result) => {
               this.log(`Add asset ${filename}`)
               compilation.assets[filename] = result
-              this.assetsMap[value] = {
-                [this.chunkName]: {
-                  js: `${compilation.outputOptions.publicPath}${filename}`,
+              if (chunk.name) {
+                this.chunkName = chunk.name
+                this.assetsMap[value] = {
+                  [chunk.name]: {
+                    js: `${compilation.outputOptions.publicPath}${filename}`,
+                  }
                 }
               }
 

@@ -505,6 +505,7 @@ describe('Webpack Multi Output', () => {
     const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
     const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
     const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
+    const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
 
     before(done => {
       const altConfig = {
@@ -527,10 +528,9 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             values: ['fr', 'en'],
             debug: true,
-            ultraDebug: true,
             uglify: true,
             assets: {
-              filename: 'assets-[value].json',
+              filename: 'assets.json',
               path: path.join(__dirname, 'dist-splitting/assets'),
               prettyPrint: true,
             },
@@ -563,6 +563,24 @@ describe('Webpack Multi Output', () => {
       expect(fs.readFileSync(mainBundlePathEN, 'utf-8')).to.contain('This is a test translated')
       expect(fs.readFileSync(secondBundlePathFR, 'utf-8')).to.contain('I see through the eyes of the blind')
       expect(fs.readFileSync(secondBundlePathEN, 'utf-8')).to.contain('This is an anomaly. Disabled')
+    })
+
+    it('should create an asset file with the main bundles', () => {
+      const assets = require(assetsPath)
+      const expected = {
+        en: {
+          main: {
+            js: '/dist-splitting/en.bundle.js',
+          }
+        },
+        fr: {
+          main: {
+            js: '/dist-splitting/fr.bundle.js',
+          }
+        }
+      }
+
+      expect(assets).to.eql(expected)
     })
   })
 })
