@@ -4,7 +4,6 @@ module.exports = function() {
     throw new Error(`"webpack-multi-output" loader is used without the corresponding plugin,
 refer to https://github.com/dailymotion/webpack-multi-output for the usage example`)
   }
-  this._compilation.__webpackMultiOutput.addAssets()
 
   return `exports.default = "WebpackMultiOutput-${this.resourcePath}-WebpackMultiOutput";`
 }

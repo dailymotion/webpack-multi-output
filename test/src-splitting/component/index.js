@@ -1,4 +1,4 @@
-var translations = require(`./i18n/en-component.i18n`).default
+var translations = require(`./i18n/en.i18n`).default
 
 export default class Component {
   render() {

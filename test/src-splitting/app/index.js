@@ -3,7 +3,7 @@ var translations = require(`./i18n/en.i18n`).default
 export default class App {
   render() {
     require.ensure([], (require) => {
-      const Component = require('./component.js').default
+      const Component = require('./../component').default
       const content = new Component()
 
       document.querySelector('#root').innerHTML = `

@@ -509,7 +509,7 @@ describe('Webpack Multi Output', () => {
     before(done => {
       const altConfig = {
         ...config,
-        entry: path.join(__dirname, 'src-splitting/index.js'),
+        entry: path.join(__dirname, 'src-splitting/app/index.js'),
         output: {
           path: path.resolve(__dirname, 'dist-splitting'),
           filename: 'bundle.js',
@@ -527,6 +527,7 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             values: ['fr', 'en'],
             debug: true,
+            ultraDebug: true,
             uglify: true,
             assets: {
               filename: 'assets-[value].json',
@@ -550,11 +551,18 @@ describe('Webpack Multi Output', () => {
       })
     })
 
-    it('should create bundles', () => {
+    it('should create all bundles and chunks', () => {
       expect(fs.existsSync(mainBundlePathFR)).to.be.true
       expect(fs.existsSync(mainBundlePathEN)).to.be.true
       expect(fs.existsSync(secondBundlePathFR)).to.be.true
       expect(fs.existsSync(secondBundlePathEN)).to.be.true
+    })
+
+    it('should contain the correct text', () => {
+      expect(fs.readFileSync(mainBundlePathFR, 'utf-8')).to.contain('Ceci est un test')
+      expect(fs.readFileSync(mainBundlePathEN, 'utf-8')).to.contain('This is a test translated')
+      expect(fs.readFileSync(secondBundlePathFR, 'utf-8')).to.contain('I see through the eyes of the blind')
+      expect(fs.readFileSync(secondBundlePathEN, 'utf-8')).to.contain('This is an anomaly. Disabled')
     })
   })
 })
