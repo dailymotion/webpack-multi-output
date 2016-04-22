@@ -119,9 +119,9 @@ WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
 }
 
 WebpackMultiOutput.prototype.processSource = function(value: string, source: Object, callback: Function): void {
-  let string = source.source()
+  let _source = source.source()
   const replaces = []
-  const matches = string.match(this.filePathReG)
+  const matches = _source.match(this.filePathReG)
 
   forEachOfLimit(matches, 10, (match: string, k: number, cb: Function): void => {
     this.replaceContent(match, value, (err, result) => {
@@ -130,9 +130,13 @@ WebpackMultiOutput.prototype.processSource = function(value: string, source: Obj
     })
   }, () => {
     replaces.forEach(replace => {
-      string = string.replace(`"${replace.source}"`, replace.replace)
+      _source = _source.replace(`"${replace.source}"`, replace.replace)
     })
-    callback(new ConcatSource(string))
+    // Holy shit this feels so wrong.
+    // this patches the require.ensure asset paths with the current value
+    // so a xx.bundle.js loads a xx.[id].bundle.js
+    _source = _source.replace('script.src = __webpack_require__.p', `script.src = __webpack_require__.p + "${value}."`)
+    callback(new ConcatSource(_source))
   })
 }
 
