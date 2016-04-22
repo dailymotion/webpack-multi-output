@@ -299,8 +299,6 @@ describe('Webpack Multi Output', () => {
         bundlePath = path.join(__dirname, `dist-name-hash/app-${stats.hash}.js`)
         const assets = stats.compilation.assets
 
-        console.log(Object.keys(assets))
-
         const frName = Object.keys(assets).find(a => {
           return a.split('.')[0] === 'fr'
         })
@@ -500,21 +498,15 @@ describe('Webpack Multi Output', () => {
     })
   })
 
-  describe('Code splitting', () => {
-    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/fr.bundle.js')
-    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
-    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
-    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
-    const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
-
+  describe('Uglify and multiple replace', () => {
     before(done => {
       const altConfig = {
         ...config,
-        entry: path.join(__dirname, 'src-splitting/app/index.js'),
+        entry: [path.join(__dirname, './src/multiple.js')],
         output: {
-          path: path.resolve(__dirname, 'dist-splitting'),
+          path: path.resolve(__dirname, 'dist-multiple'),
           filename: 'bundle.js',
-          publicPath: '/dist-splitting/',
+          publicPath: '/static/',
         },
         plugins: [
           new webpack.optimize.UglifyJsPlugin({
@@ -525,6 +517,60 @@ describe('Webpack Multi Output', () => {
               warnings: false
             }
           }),
+          new WebpackMultiOutputPlugin({
+            values: ['fr', 'en'],
+            uglify: true,
+            debug: true,
+          }),
+        ],
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should include all content', () => {
+      const content = fs.readFileSync(path.join(__dirname, 'dist-multiple/en.bundle.js'), 'utf-8')
+
+      expect(content).to.contain('This is a test translated')
+      expect(content).to.contain('This is an anomaly. Disabled. What is true?')
+    })
+  })
+
+  describe('Code splitting', () => {
+    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/fr.bundle.js')
+    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
+    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
+    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
+    const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
+
+    before(done => {
+      const altConfig = {
+        ...config,
+        entry: [path.join(__dirname, 'src-splitting/app/index.js')],
+        output: {
+          path: path.resolve(__dirname, 'dist-splitting'),
+          filename: 'bundle.js',
+          publicPath: '/dist-splitting/',
+        },
+        plugins: [
+          // new webpack.optimize.UglifyJsPlugin({
+          //   output: {
+          //     comments: false
+          //   },
+          //   compressor: {
+          //     warnings: false
+          //   }
+          // }),
           new WebpackMultiOutputPlugin({
             values: ['fr', 'en'],
             debug: true,

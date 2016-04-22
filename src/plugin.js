@@ -122,6 +122,11 @@ WebpackMultiOutput.prototype.processSource = function(value: string, source: Obj
   const lines = source.source().split('\n')
 
   mapLimit(lines, 20, (line: string, mapCb: Function) => {
+    // Holy shit this feels so wrong.
+    // this patches the require.ensure asset paths with the current value
+    // so a xx.bundle.js loads a xx.[id].bundle.js
+    line = line.replace('script.src = __webpack_require__.p', `script.src = __webpack_require__.p + "${value}."`)
+
     this.replaceContent(line, value, (err, result) => {
       mapCb(err, result)
     })
