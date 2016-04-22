@@ -12,7 +12,7 @@ const compiledPlugin = require('../plugin')
 import * as test from '../'
 
 const config = {
-  entry: path.join(__dirname, 'webpack/index.js'),
+  entry: path.join(__dirname, 'src/index.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
@@ -138,7 +138,7 @@ describe('Webpack Multi Output', () => {
       const altConfig = {
         ...config,
         context: path.join(__dirname, '..'),
-        entry: path.join(__dirname, 'webpack/complex.js'),
+        entry: path.join(__dirname, 'src/complex.js'),
         output: {
           path: path.resolve(__dirname, 'dist-combine-plugins'),
           filename: 'bundle.js',
@@ -247,7 +247,7 @@ describe('Webpack Multi Output', () => {
       const altConfig = {
         ...config,
         entry: {
-          app: [path.join(__dirname, 'webpack/complex.js')],
+          app: [path.join(__dirname, 'src/complex.js')],
         },
         output: {
           path: path.resolve(__dirname, 'dist-name-hash'),
@@ -502,6 +502,67 @@ describe('Webpack Multi Output', () => {
 
         done()
       })
+    })
+  })
+
+  describe('Code splitting', () => {
+    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/bundle-fr.js')
+    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/bundle-en.js')
+    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/1.bundle-fr.js')
+    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/1.bundle-en.js')
+
+    before(done => {
+      const config = {
+        entry: path.join(__dirname, 'src-splitting/index.js'),
+        output: {
+          path: path.resolve(__dirname, 'dist-splitting'),
+          filename: 'bundle.js',
+          publicPath: '/dist-splitting/',
+        },
+        module: {
+          loaders: [
+            {
+              test: /\.js$/,
+              loader: 'babel-loader',
+            },
+            {
+              test: /\.i18n$/,
+              loader: 'WebpackMultiOutputLoader',
+            },
+          ],
+        },
+        resolveLoader: {
+          alias: {
+            WebpackMultiOutputLoader: path.join(__dirname, '../src/loader.js'),
+          }
+        },
+        plugins: [
+          new WebpackMultiOutputPlugin({
+            filename: 'bundle-[value].js',
+            values: ['fr', 'en'],
+            debug: true,
+          }),
+        ],
+      }
+
+      webpack(config, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should create bundles', () => {
+      expect(fs.existsSync(mainBundlePathFR)).to.be.true
+      expect(fs.existsSync(mainBundlePathEN)).to.be.true
+      expect(fs.existsSync(secondBundlePathFR)).to.be.true
+      expect(fs.existsSync(secondBundlePathEN)).to.be.true
     })
   })
 })

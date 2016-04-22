@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Webpack Multi Output Rocks</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    var search = location.search.substring(1).split('&').reduce(function(result, value) {
+      var parts = value.split('=')
+      if (parts[0]) result[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1])
+      return result
+    }, {})
+    var lang = search.lang ? search.lang : 'en'
+    var alt = lang === 'en' ? 'fr' : 'en'
+
+    document.write('<script src="/dist-splitting/bundle-' + lang + '.js"><\/script>')
+
+    document.write('<a href="/?lang=' + alt + '">See version ' + alt + '</a>')
+  </script>
+</body>
+</html>

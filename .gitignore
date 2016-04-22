@@ -5,3 +5,4 @@ test/dist-call-stack
 test/dist-combine-plugins
 test/dist-keep-original
 test/dist-name-hash
+test/dist-splitting

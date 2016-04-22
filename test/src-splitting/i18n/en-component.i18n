@@ -1,0 +1,13 @@
+{
+  "locale_data": {
+    "messages": {
+      "": {
+        "domain": "messages",
+        "lang": "en",
+        "plural_forms": "nplurals=2; plural=(n != 1);"
+      },
+      "one": [null, "This is an anomaly. Disabled. What is true?"],
+      "two": [null, "Not destined for incarceration, I crave my nothingness"]
+    }
+  }
+}

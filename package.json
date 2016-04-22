@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
-    "clean": "rm -rf lib test/dist test/dist-keep-original test/dist-combine-plugins test/dist-name-hash test/dist-assets-option test/dist-assets test/dist-call-stack",
+    "clean": "rm -rf lib test/dist*",
     "test": "npm run clean && npm run build && mocha --compilers js:babel-register test/*.js",
     "flow": "flow"
   },
