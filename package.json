@@ -31,7 +31,6 @@
     "css-loader": "^0.23.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "flow-bin": "^0.22.1",
-    "json-loader": "^0.5.4",
     "mocha": "^2.4.5",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.0"

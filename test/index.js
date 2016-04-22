@@ -39,7 +39,6 @@ const config = {
       __LOCALE__: `'fr'`,
     }),
     new WebpackMultiOutputPlugin({
-      filename: 'bundle-[value].js',
       values: ['fr', 'en'],
       debug: true,
     }),
@@ -77,8 +76,8 @@ describe('Webpack Multi Output', () => {
 
   describe('Webpack plugin', () => {
     const bundlePath = path.join(__dirname, 'dist/bundle.js')
-    const bundlePathFR = path.join(__dirname, 'dist/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist/en.bundle.js')
 
     before((done) => {
       webpack(config, (err, stats) => {
@@ -130,8 +129,8 @@ describe('Webpack Multi Output', () => {
   describe('Plugin combining', () => {
     const bundlePath = path.join(__dirname, 'dist-combine-plugins/bundle.js')
     const cssBundlePath = path.join(__dirname, 'dist-combine-plugins/style.css')
-    const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/en.bundle.js')
 
     before(function(done) {
       this.timeout(4000)
@@ -167,7 +166,6 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
             values: ['fr', 'en'],
             debug: true,
             uglify: true,
@@ -277,7 +275,6 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new WebpackMultiOutputPlugin({
-            filename: '[name]-[value]-[contenthash].js',
             values: ['fr', 'en'],
             assets: {
               filename: 'name-hash-assets.json',
@@ -302,15 +299,15 @@ describe('Webpack Multi Output', () => {
         bundlePath = path.join(__dirname, `dist-name-hash/app-${stats.hash}.js`)
         const assets = stats.compilation.assets
 
+        console.log(Object.keys(assets))
+
         const frName = Object.keys(assets).find(a => {
-          const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'fr'
+          return a.split('.')[0] === 'fr'
         })
         bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
 
         const enName = Object.keys(assets).find(a => {
-          const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'en'
+          return a.split('.')[0] === 'en'
         })
         bundlePathName = enName
         bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
@@ -384,8 +381,8 @@ describe('Webpack Multi Output', () => {
 
   describe('Multiple asset files', () => {
     const bundlePath = path.join(__dirname, 'dist-assets-option/bundle.js')
-    const bundlePathFR = path.join(__dirname, 'dist-assets-option/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist-assets-option/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist-assets-option/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist-assets-option/en.bundle.js')
 
     const assetsPathFR = path.join(__dirname, 'dist-assets-option/assets/assets-fr.json')
     const assetsPathEN = path.join(__dirname, 'dist-assets-option/assets/assets-en.json')
@@ -400,7 +397,6 @@ describe('Webpack Multi Output', () => {
         },
         plugins: [
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
             values: ['fr', 'en'],
             assets: {
               filename: 'assets-[value].json',
@@ -484,7 +480,6 @@ describe('Webpack Multi Output', () => {
             __LOCALE__: `'fr'`,
           }),
           new WebpackMultiOutputPlugin({
-            filename: '[name]-[value].[contenthash].js',
             values: languages,
             debug: true,
           }),
@@ -506,46 +501,43 @@ describe('Webpack Multi Output', () => {
   })
 
   describe('Code splitting', () => {
-    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/bundle-fr.js')
-    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/bundle-en.js')
-    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/1.bundle-fr.js')
-    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/1.bundle-en.js')
+    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/fr.bundle.js')
+    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
+    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
+    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
 
     before(done => {
-      const config = {
+      const altConfig = {
+        ...config,
         entry: path.join(__dirname, 'src-splitting/index.js'),
         output: {
           path: path.resolve(__dirname, 'dist-splitting'),
           filename: 'bundle.js',
           publicPath: '/dist-splitting/',
         },
-        module: {
-          loaders: [
-            {
-              test: /\.js$/,
-              loader: 'babel-loader',
-            },
-            {
-              test: /\.i18n$/,
-              loader: 'WebpackMultiOutputLoader',
-            },
-          ],
-        },
-        resolveLoader: {
-          alias: {
-            WebpackMultiOutputLoader: path.join(__dirname, '../src/loader.js'),
-          }
-        },
         plugins: [
+          new webpack.optimize.UglifyJsPlugin({
+            output: {
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
             values: ['fr', 'en'],
             debug: true,
+            uglify: true,
+            assets: {
+              filename: 'assets-[value].json',
+              path: path.join(__dirname, 'dist-splitting/assets'),
+              prettyPrint: true,
+            },
           }),
         ],
       }
 
-      webpack(config, (err, stats) => {
+      webpack(altConfig, (err, stats) => {
         if (err) {
           return done(err)
         }

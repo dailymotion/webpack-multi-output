@@ -17,7 +17,6 @@ const baseAssets = {
 
 export default function WebpackMultiOutput(options: Object = {}): void {
   this.options = merge({
-    filename: 'bundle-[value].js',
     values: [],
     debug: false,
     ultraDebug: false,
@@ -37,118 +36,44 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
-    compilation.__webpackMultiOutput = {
-      addAssets: () => {
-        if (!this.assets.length) {
-          this.mainBundleName = compilation.outputOptions.filename
-          this.options.values.forEach(value => {
-            const filename = this.options.filename.replace('[value]', value)
-            this.assets.push(filename)
-            this.assetsValue[filename] = value
-            compilation.assets[filename] = new ConcatSource('/* WebpackMultiOutput */')
-          })
-        }
-      }
-    }
+    compilation.__webpackMultiOutput = true
 
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
     }
 
     compilation.plugin('optimize-chunk-assets', (chunks: Array<Object>, callback: Function): void => {
-      let langAsset = clone(compilation.assets[this.mainBundleName])
-
-      // fallback if the main bundle has [name]
-      if (typeof langAsset === 'undefined') {
-        const assets = compilation.assets
-        if (Object.keys(assets).length > 1) {
-          const jsBundles = Object.keys(assets).filter(asset => {
-            return path.extname(asset) === '.js' && this.assets.indexOf(asset) === -1
-          })
-
-          this.mainBundleName = jsBundles[jsBundles.length - 1]
-          langAsset = clone(assets[this.mainBundleName])
-        }
-        else {
-          // prevent errors in children compilations
-          return callback()
-        }
-      }
-
-      this.assets.forEach(asset => {
-        compilation.assets[asset] = langAsset
-      })
-
-      const _c = chunks.length
-      let _cd = 0
-
-      chunks.forEach(chunk => {
+      forEachOfLimit(chunks, 5, (chunk: Object, y: number, chunkCallback: Function) => {
+        // crappppppp
         this.chunkName = chunk.name
-        if (chunk.files.indexOf(this.mainBundleName) !== -1) {
-          Object.keys(compilation.assets).forEach(asset => {
-            if (chunk.files.indexOf(asset) === -1) {
-              this.log(`Add asset ${asset}`)
-              chunk.files.push(asset)
-            }
-          })
-        }
-
-        forEachOfLimit(chunk.files, 5, (file: string, k: number, cb: Function) => {
-          if (this.assets.indexOf(file) === -1) {
-            this.log(`Ignore ${file} - not our asset`, 'ultra')
-            return asyncSetImmediate(cb)
+        forEachOfLimit(chunk.files, 5, (file: string, k: number, fileCallback: Function) => {
+          if (path.extname(file) !== '.js') {
+            return fileCallback()
           }
 
-          const _value = this.assetsValue[file]
-          const _source = new ConcatSource(compilation.assets[file])
-          const lines = _source.source().split('\n')
+          let _v = 0
 
-          mapLimit(lines, 20, (line: string, mapCb: Function) => {
-            this.replaceContent(line, _value, (err, result) => {
-              mapCb(err, result)
+          this.options.values.forEach(value => {
+            const source = compilation.assets[file]
+            const basename = path.basename(file, '.js')
+            const filename = `${value}.${basename}.js`
+
+            this.processSource(value, clone(source), (result) => {
+              this.log(`Add asset ${filename}`)
+              compilation.assets[filename] = result
+              this.assetsMap[value] = {
+                [this.chunkName]: {
+                  js: `${compilation.outputOptions.publicPath}${filename}`,
+                }
+              }
+
+              _v++
+              _v === this.options.values.length && fileCallback()
             })
-          }, (err, resultLines) => {
-            const source = new ConcatSource(resultLines.join('\n'))
-
-            compilation.assets[file] = source
-            cb()
           })
         }, () => {
-          _cd++
-
-          this.log(`Done replacing`, 'ultra')
-          _cd === _c && callback()
+          chunkCallback()
         })
-      })
-    })
-
-    compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
-      forEachOfLimit(this.assets, 20, (asset: string, k: number, cb: Function) => {
-        const source = compilation.assets[asset]
-        if (typeof source === 'undefined') {
-          return asyncSetImmediate(cb)
-        }
-
-        this.log(`Renaming asset ${asset}`, 'ultra')
-
-        const filename = asset.replace(/\[(?:(\w+):)?contenthash(?::([a-z]+\d*))?(?::(\d+))?\]/ig, () => {
-          return getHashDigest(source.source(), arguments[1], arguments[2], parseInt(arguments[3], 10))
-        }).replace('[name]', this.chunkName)
-
-        if (filename !== asset) {
-          compilation.assets[filename] = source
-          delete compilation.assets[asset]
-        }
-
-        const value = this.assetsValue[asset]
-
-        this.assetsMap[value] = {
-          [this.chunkName]: {
-            js: `${compilation.outputOptions.publicPath}${filename}`,
-          }
-        }
-
-        cb()
       }, callback)
     })
   })
@@ -195,6 +120,19 @@ WebpackMultiOutput.prototype.getFilePath = function(string: string): string {
   const match = string.match(filePathRe)
 
   return match ? match[1] : ''
+}
+
+WebpackMultiOutput.prototype.processSource = function(value: string, source: Object, callback: Function): void {
+  const lines = source.source().split('\n')
+
+  mapLimit(lines, 20, (line: string, mapCb: Function) => {
+    this.replaceContent(line, value, (err, result) => {
+      mapCb(err, result)
+    })
+  }, (err, resultLines) => {
+    const source = new ConcatSource(resultLines.join('\n'))
+    callback(source)
+  })
 }
 
 WebpackMultiOutput.prototype.replaceContent = function(source: string, value: string, callback: Function): void {

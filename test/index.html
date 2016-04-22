@@ -14,7 +14,7 @@
     var lang = search.lang ? search.lang : 'en'
     var alt = lang === 'en' ? 'fr' : 'en'
 
-    document.write('<script src="/dist-splitting/bundle-' + lang + '.js"><\/script>')
+    document.write('<script src="/dist-splitting/' + lang + '.bundle.js"><\/script>')
 
     document.write('<a href="/?lang=' + alt + '">See version ' + alt + '</a>')
   </script>
