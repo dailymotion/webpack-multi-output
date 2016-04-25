@@ -2,9 +2,10 @@
 <html>
 <head>
   <title>Webpack Multi Output Rocks</title>
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <div id="root"></div>
+  <div class="container" id="root"></div>
   <script>
     var search = location.search.substring(1).split('&').reduce(function(result, value) {
       var parts = value.split('=')
@@ -15,7 +16,6 @@
     var alt = lang === 'en' ? 'fr' : 'en'
 
     document.write('<script src="/dist-splitting/' + lang + '.bundle.js"><\/script>')
-
     document.write('<a href="/?lang=' + alt + '">See version ' + alt + '</a>')
   </script>
 </body>

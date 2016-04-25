@@ -553,7 +553,8 @@ describe('Webpack Multi Output', () => {
     const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
     const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
 
-    before(done => {
+    before(function(done) {
+      this.timeout(10000)
       const altConfig = {
         ...config,
         entry: [path.join(__dirname, 'src-splitting/app/index.js')],
