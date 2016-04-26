@@ -44,7 +44,11 @@ This will produce a `bundle.js` and a bundle for each value given to the plugin 
 var translations = require(`./i18n/en.i18n`)
 ```
 
-With the configuration above, this will produce three bundles: `bundle-en.js` with `translations` being the content of `./i18n/en.i18n`, `bundle-fr.js` with the content of `./i18n/fr.i18n` and `bundle-es.js` with the content of `./i18n/es.i18n`.
+With the configuration above, this will produce three bundles: `en.bundle.js` with `translations` being the content of `./i18n/en.i18n`, `fr.bundle.js` with the content of `./i18n/fr.i18n` and `es.bundle.js` with the content of `./i18n/es.i18n`.
+
+### Code splitting
+
+Using `require.ensure()`? No problem. If the module you require needs also require some `.i18n` files (following the example above), the plugin will also create multiple versions for all given values. And all bundles will load the appropriate chunks: for example, the bundle `fr.bundle.js` will load the chunk `fr.1.bundle.js`.
 
 ## Options
 
@@ -139,11 +143,3 @@ plugins: [
 * `OccurenceOrderPlugin`
 * `UglifyJsPlugin`
 * `extract-text-webpack-plugin`
-
-## Todo
-
-* make it work with multiple entries / code splitting
-
-Bonus:
-
-* make it work with sourcemap

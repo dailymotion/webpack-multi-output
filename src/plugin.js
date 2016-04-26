@@ -7,7 +7,7 @@ import mkdirp from 'mkdirp'
 import clone from 'lodash.clone'
 import merge from 'lodash.merge'
 import {ConcatSource} from 'webpack-sources'
-import {forEachOfLimit, mapLimit, setImmediate as asyncSetImmediate} from 'async'
+import {forEachOfLimit, setImmediate as asyncSetImmediate} from 'async'
 
 const baseAssets = {
   filename: 'assets.json',
