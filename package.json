@@ -1,6 +1,6 @@
 {
   "name": "webpack-multi-output",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Webpack loader and plugin to produce multiple bundle from one import",
   "main": "index.js",
   "author": "Romain Berger <romain@romainberger.com>",
