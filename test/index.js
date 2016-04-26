@@ -233,7 +233,7 @@ describe('Webpack Multi Output', () => {
     })
   })
 
-  describe('Plugin combining and [name], [contenthash], and [value] in the middle', () => {
+  describe('Plugin combining and [name] and [hash]', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
@@ -551,6 +551,9 @@ describe('Webpack Multi Output', () => {
     const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
     const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
     const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
+    const momentBundlePath = path.join(__dirname, 'dist-splitting/2.bundle.js')
+    const momentBundlePathEN = path.join(__dirname, 'dist-splitting/en.2.bundle.js')
+    const momentBundlePathFR = path.join(__dirname, 'dist-splitting/fr.2.bundle.js')
     const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
 
     before(function(done) {
@@ -562,6 +565,7 @@ describe('Webpack Multi Output', () => {
           path: path.resolve(__dirname, 'dist-splitting'),
           filename: 'bundle.js',
           publicPath: '/dist-splitting/',
+          // chunkFilename: '[id].[chunkhash].bundle.js',
         },
         plugins: [
           // new webpack.optimize.UglifyJsPlugin({
@@ -575,6 +579,7 @@ describe('Webpack Multi Output', () => {
           new WebpackMultiOutputPlugin({
             values: ['fr', 'en'],
             debug: true,
+            ultraDebug: true,
             uglify: true,
             assets: {
               filename: 'assets.json',
@@ -603,6 +608,12 @@ describe('Webpack Multi Output', () => {
       expect(fs.existsSync(mainBundlePathEN)).to.be.true
       expect(fs.existsSync(secondBundlePathFR)).to.be.true
       expect(fs.existsSync(secondBundlePathEN)).to.be.true
+    })
+
+    it('should not create useless chunks', () => {
+      expect(fs.existsSync(momentBundlePath)).to.be.true
+      expect(fs.existsSync(momentBundlePathEN)).to.be.false
+      expect(fs.existsSync(momentBundlePathFR)).to.be.false
     })
 
     it('should contain the correct text', () => {
