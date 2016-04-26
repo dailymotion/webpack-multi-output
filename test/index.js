@@ -283,6 +283,7 @@ describe('Webpack Multi Output', () => {
             },
             uglify: true,
             debug: true,
+            ultraDebug: true,
           }),
         ],
       }
@@ -341,6 +342,14 @@ describe('Webpack Multi Output', () => {
 
       expect(assets.en.app.js).to.equal(`/static/${bundlePathName}`)
       expect(assets.en.app.css).to.equal(`/static/${bundleCSSPathName}`)
+    })
+
+    it('should produce a different hash for all bundles', () => {
+      const assets = require(assetsPath)
+      const frFilename = assets.fr.app.js.replace('fr.', '')
+      const enFilename = assets.en.app.js.replace('en.', '')
+
+      expect(frFilename).to.not.equal(enFilename)
     })
 
     it('should include the appropriate content for value FR', done => {

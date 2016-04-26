@@ -36,7 +36,10 @@ export default function WebpackMultiOutput(options: Object = {}): void {
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
     compilation.__webpackMultiOutput = true
-    this.needsHash = /\[hash\]/.test(compilation.outputOptions.filename)
+
+    if (path.extname(compilation.outputOptions.filename) === '.js' && !this.needsHash) {
+      this.needsHash = /\[hash\]/.test(compilation.outputOptions.filename)
+    }
 
     if (!this.options.values.length) {
       compilation.errors.push(new Error(`[webpack-multi-output] Error: option "values" must be an array of length >= 1`))
@@ -96,6 +99,8 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           return
         }
 
+        console.log('REPLACE HASH')
+
         const fileHash = createHash('md5').update(source.source()).digest('hex').substr(0, length)
         const newFilename = filename.replace(this.chunkHash, fileHash)
 
@@ -116,13 +121,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
       const chunkIdModifier = `var webpackMultiOutputGetChunkId = function(chunkId) {
         var map = {__WEBPACK_MULTI_OUTPUT_CHUNK_MAP__:2};
-
-        if (map[chunkId]) {
-          return '__WEBPACK_MULTI_OUTPUT_VALUE__.' + chunkId;
-        }
-        else {
-          return chunkId;
-        }
+        return map[chunkId] ? '__WEBPACK_MULTI_OUTPUT_VALUE__.' + chunkId : chunkId;
       };
       `
 
