@@ -1,6 +1,6 @@
 {
   "name": "webpack-multi-output",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Webpack loader and plugin to produce multiple bundle from one import",
   "main": "index.js",
   "author": "Romain Berger <romain@romainberger.com>",
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "rm -rf lib && babel src --out-dir lib",
-    "clean": "rm -rf lib test/dist test/dist-keep-original test/dist-combine-plugins test/dist-name-hash test/dist-assets-option test/dist-assets test/dist-call-stack",
+    "clean": "rm -rf lib test/dist*",
     "test": "npm run clean && npm run build && mocha --compilers js:babel-register test/*.js",
     "flow": "flow"
   },
@@ -31,8 +31,8 @@
     "css-loader": "^0.23.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "flow-bin": "^0.22.1",
-    "json-loader": "^0.5.4",
     "mocha": "^2.4.5",
+    "moment": "^2.13.0",
     "style-loader": "^0.13.1",
     "webpack": "^1.13.0"
   },

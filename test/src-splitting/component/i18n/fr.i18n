@@ -1,0 +1,13 @@
+{
+  "locale_data": {
+    "messages": {
+      "": {
+        "domain": "messages",
+        "lang": "en",
+        "plural_forms": "nplurals=2; plural=(n != 1);"
+      },
+      "one": [null, "The illness that they whisper of, is that what makes me fail?"],
+      "two": [null, "I see through the eyes of the blind"]
+    }
+  }
+}

@@ -12,7 +12,7 @@ const compiledPlugin = require('../plugin')
 import * as test from '../'
 
 const config = {
-  entry: path.join(__dirname, 'webpack/index.js'),
+  entry: path.join(__dirname, 'src/index.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
@@ -39,7 +39,6 @@ const config = {
       __LOCALE__: `'fr'`,
     }),
     new WebpackMultiOutputPlugin({
-      filename: 'bundle-[value].js',
       values: ['fr', 'en'],
       debug: true,
     }),
@@ -77,8 +76,8 @@ describe('Webpack Multi Output', () => {
 
   describe('Webpack plugin', () => {
     const bundlePath = path.join(__dirname, 'dist/bundle.js')
-    const bundlePathFR = path.join(__dirname, 'dist/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist/en.bundle.js')
 
     before((done) => {
       webpack(config, (err, stats) => {
@@ -130,15 +129,15 @@ describe('Webpack Multi Output', () => {
   describe('Plugin combining', () => {
     const bundlePath = path.join(__dirname, 'dist-combine-plugins/bundle.js')
     const cssBundlePath = path.join(__dirname, 'dist-combine-plugins/style.css')
-    const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/en.bundle.js')
 
     before(function(done) {
       this.timeout(4000)
       const altConfig = {
         ...config,
         context: path.join(__dirname, '..'),
-        entry: path.join(__dirname, 'webpack/complex.js'),
+        entry: path.join(__dirname, 'src/complex.js'),
         output: {
           path: path.resolve(__dirname, 'dist-combine-plugins'),
           filename: 'bundle.js',
@@ -167,7 +166,6 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
             values: ['fr', 'en'],
             debug: true,
             uglify: true,
@@ -235,7 +233,7 @@ describe('Webpack Multi Output', () => {
     })
   })
 
-  describe('Plugin combining and [name], [contenthash], and [value] in the middle', () => {
+  describe('Plugin combining and [name] and [hash]', () => {
     let bundlePath
     let bundlePathFR
     let bundlePathEN
@@ -247,7 +245,7 @@ describe('Webpack Multi Output', () => {
       const altConfig = {
         ...config,
         entry: {
-          app: [path.join(__dirname, 'webpack/complex.js')],
+          app: [path.join(__dirname, 'src/complex.js')],
         },
         output: {
           path: path.resolve(__dirname, 'dist-name-hash'),
@@ -277,7 +275,6 @@ describe('Webpack Multi Output', () => {
             }
           }),
           new WebpackMultiOutputPlugin({
-            filename: '[name]-[value]-[contenthash].js',
             values: ['fr', 'en'],
             assets: {
               filename: 'name-hash-assets.json',
@@ -303,14 +300,12 @@ describe('Webpack Multi Output', () => {
         const assets = stats.compilation.assets
 
         const frName = Object.keys(assets).find(a => {
-          const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'fr'
+          return a.split('.')[0] === 'fr'
         })
         bundlePathFR = path.join(__dirname, `dist-name-hash/${frName}`)
 
         const enName = Object.keys(assets).find(a => {
-          const chunks = a.split('-')
-          return chunks[0] === 'app' && chunks[chunks.length - 2] === 'en'
+          return a.split('.')[0] === 'en'
         })
         bundlePathName = enName
         bundlePathEN = path.join(__dirname, `dist-name-hash/${enName}`)
@@ -384,8 +379,8 @@ describe('Webpack Multi Output', () => {
 
   describe('Multiple asset files', () => {
     const bundlePath = path.join(__dirname, 'dist-assets-option/bundle.js')
-    const bundlePathFR = path.join(__dirname, 'dist-assets-option/bundle-fr.js')
-    const bundlePathEN = path.join(__dirname, 'dist-assets-option/bundle-en.js')
+    const bundlePathFR = path.join(__dirname, 'dist-assets-option/fr.bundle.js')
+    const bundlePathEN = path.join(__dirname, 'dist-assets-option/en.bundle.js')
 
     const assetsPathFR = path.join(__dirname, 'dist-assets-option/assets/assets-fr.json')
     const assetsPathEN = path.join(__dirname, 'dist-assets-option/assets/assets-en.json')
@@ -400,7 +395,6 @@ describe('Webpack Multi Output', () => {
         },
         plugins: [
           new WebpackMultiOutputPlugin({
-            filename: 'bundle-[value].js',
             values: ['fr', 'en'],
             assets: {
               filename: 'assets-[value].json',
@@ -484,7 +478,6 @@ describe('Webpack Multi Output', () => {
             __LOCALE__: `'fr'`,
           }),
           new WebpackMultiOutputPlugin({
-            filename: '[name]-[value].[contenthash].js',
             values: languages,
             debug: true,
           }),
@@ -502,6 +495,150 @@ describe('Webpack Multi Output', () => {
 
         done()
       })
+    })
+  })
+
+  describe('Uglify and multiple replace', () => {
+    before(done => {
+      const altConfig = {
+        ...config,
+        entry: [path.join(__dirname, './src/multiple.js')],
+        output: {
+          path: path.resolve(__dirname, 'dist-multiple'),
+          filename: 'bundle.js',
+          publicPath: '/static/',
+        },
+        plugins: [
+          new webpack.optimize.UglifyJsPlugin({
+            output: {
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
+          new WebpackMultiOutputPlugin({
+            values: ['fr', 'en'],
+            uglify: true,
+            debug: true,
+          }),
+        ],
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should include all content', () => {
+      const content = fs.readFileSync(path.join(__dirname, 'dist-multiple/en.bundle.js'), 'utf-8')
+
+      expect(content).to.contain('This is a test translated')
+      expect(content).to.contain('This is an anomaly. Disabled. What is true?')
+    })
+  })
+
+  describe('Code splitting', () => {
+    const mainBundlePathFR = path.join(__dirname, 'dist-splitting/fr.bundle.js')
+    const mainBundlePathEN = path.join(__dirname, 'dist-splitting/en.bundle.js')
+    const secondBundlePathFR = path.join(__dirname, 'dist-splitting/fr.1.bundle.js')
+    const secondBundlePathEN = path.join(__dirname, 'dist-splitting/en.1.bundle.js')
+    const momentBundlePath = path.join(__dirname, 'dist-splitting/2.bundle.js')
+    const momentBundlePathEN = path.join(__dirname, 'dist-splitting/en.2.bundle.js')
+    const momentBundlePathFR = path.join(__dirname, 'dist-splitting/fr.2.bundle.js')
+    const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
+
+    before(function(done) {
+      this.timeout(20000)
+      const altConfig = {
+        ...config,
+        entry: [path.join(__dirname, 'src-splitting/app/index.js')],
+        output: {
+          path: path.resolve(__dirname, 'dist-splitting'),
+          filename: 'bundle.js',
+          publicPath: '/dist-splitting/',
+          // chunkFilename: '[id].[chunkhash].bundle.js',
+        },
+        plugins: [
+          new webpack.optimize.UglifyJsPlugin({
+            output: {
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
+          new WebpackMultiOutputPlugin({
+            values: ['fr', 'en'],
+            debug: true,
+            ultraDebug: true,
+            uglify: true,
+            assets: {
+              filename: 'assets.json',
+              path: path.join(__dirname, 'dist-splitting/assets'),
+              prettyPrint: true,
+            },
+          }),
+        ],
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should create all bundles and chunks', () => {
+      expect(fs.existsSync(mainBundlePathFR)).to.be.true
+      expect(fs.existsSync(mainBundlePathEN)).to.be.true
+      expect(fs.existsSync(secondBundlePathFR)).to.be.true
+      expect(fs.existsSync(secondBundlePathEN)).to.be.true
+    })
+
+    it('should not create useless chunks', () => {
+      expect(fs.existsSync(momentBundlePath)).to.be.true
+      expect(fs.existsSync(momentBundlePathEN)).to.be.false
+      expect(fs.existsSync(momentBundlePathFR)).to.be.false
+    })
+
+    it('should contain the correct text', () => {
+      expect(fs.readFileSync(mainBundlePathFR, 'utf-8')).to.contain('Ceci est un test')
+      expect(fs.readFileSync(mainBundlePathEN, 'utf-8')).to.contain('This is a test translated')
+      expect(fs.readFileSync(secondBundlePathFR, 'utf-8')).to.contain('I see through the eyes of the blind')
+      expect(fs.readFileSync(secondBundlePathEN, 'utf-8')).to.contain('This is an anomaly. Disabled')
+    })
+
+    it('should create an asset file with the main bundles', () => {
+      const assets = require(assetsPath)
+      const expected = {
+        en: {
+          main: {
+            js: '/dist-splitting/en.bundle.js',
+          }
+        },
+        fr: {
+          main: {
+            js: '/dist-splitting/fr.bundle.js',
+          }
+        }
+      }
+
+      expect(assets).to.eql(expected)
     })
   })
 })

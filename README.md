@@ -31,14 +31,13 @@ module.exports = {
   },
   plugins: [
     new WebpackMultiOutputPlugin({
-      filename: 'bundle-[value].js',
       values: ['en', 'fr', 'es']
     })
   ]
 }
 ```
 
-This will produce a `bundle.js` and a bundle for each value given to the plugin (`bundle-[value].js`). The imported file will be replaced by a file with the filename changed to the value. Example because this sentence is not clear at all:
+This will produce a `bundle.js` and a bundle for each value given to the plugin (`[value].bundle.js`). The imported file will be replaced by a file with the filename changed to the value. Example because this sentence is not clear at all:
 
 ```js
 // your code
@@ -49,12 +48,10 @@ With the configuration above, this will produce three bundles: `bundle-en.js` wi
 
 ## Options
 
-* `filename`: Filename template for the bundles that will be generated. Must contain `[value]` somewhere, default to `bundle-[value].js`. Can contain `[contenthash]`.
 * `values`: The plugin will produce a bundle for each value given, appending the value to the bundle name. 
 * `assets`: See the [documentation below](#assets).
 * `uglify`: If you're using this module for json, enable this option to minify it. See [Uglify](#uglify) for more informations.
 * `debug`: Log when the plugin adds an asset. Default to `false`
-* `ultraDebug`: Like debug, but with waaaaaaay more shit. Default to `false`
 
 ## Assets
 
@@ -63,7 +60,6 @@ The [assets-webpack-plugin](https://github.com/kossnocorp/assets-webpack-plugin)
 ```js
 // webpack config
 new WebpackMultiOutputPlugin({
-  filename: 'bundle-[value].js',
   values: ['en', 'fr'],
   assets: {
     filename: 'assets.json',
@@ -96,7 +92,6 @@ If you need an asset file per value, just use `[value]` in the `filename` option
 
 ```js
 new WebpackMultiOutputPlugin({
-  filename: 'bundle-[value].js',
   values: ['en', 'fr'],
   assets {
     filename: '[value].json',
