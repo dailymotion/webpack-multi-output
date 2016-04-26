@@ -557,7 +557,7 @@ describe('Webpack Multi Output', () => {
     const assetsPath = path.join(__dirname, 'dist-splitting/assets/assets.json')
 
     before(function(done) {
-      this.timeout(10000)
+      this.timeout(20000)
       const altConfig = {
         ...config,
         entry: [path.join(__dirname, 'src-splitting/app/index.js')],
@@ -568,14 +568,14 @@ describe('Webpack Multi Output', () => {
           // chunkFilename: '[id].[chunkhash].bundle.js',
         },
         plugins: [
-          // new webpack.optimize.UglifyJsPlugin({
-          //   output: {
-          //     comments: false
-          //   },
-          //   compressor: {
-          //     warnings: false
-          //   }
-          // }),
+          new webpack.optimize.UglifyJsPlugin({
+            output: {
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
           new WebpackMultiOutputPlugin({
             values: ['fr', 'en'],
             debug: true,
