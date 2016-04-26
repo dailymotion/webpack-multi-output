@@ -91,15 +91,13 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     compilation.plugin('optimize-assets', (assets: Object, callback: Function): void => {
       const length = this.chunkHash.length
 
-      this.addedAssets.forEach(({value, filename, name}) => {
+      forEachOfLimit(this.addedAssets, 5, ({value, filename, name}, index, assetCallback) => {
         const source = this.replaceChunkMap(compilation.assets[filename])
 
         if (!this.needsHash) {
           compilation.assets[filename] = source
-          return
+          return asyncSetImmediate(assetCallback)
         }
-
-        console.log('REPLACE HASH')
 
         const fileHash = createHash('md5').update(source.source()).digest('hex').substr(0, length)
         const newFilename = filename.replace(this.chunkHash, fileHash)
@@ -111,9 +109,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           delete compilation.assets[filename]
           this.addToAssetsMap(value, name, `${compilation.outputOptions.publicPath}${newFilename}`)
         }
-      })
 
-      callback()
+        assetCallback()
+      }, callback)
     })
 
     compilation.mainTemplate.plugin('jsonp-script', (_: string): string => {
