@@ -33,6 +33,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   this.filePathRe = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/
   this.filePathReG = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/g
 }
+
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
   compiler.plugin('compilation', (compilation: Object): void => {
     compilation.__webpackMultiOutput = true
