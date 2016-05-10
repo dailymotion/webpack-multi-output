@@ -200,8 +200,8 @@ WebpackMultiOutput.prototype.replaceContent = function(source: string, value: st
 
   let newResourcePath = resourcePath.replace(`${basename}${ext}`, `${value}${ext}`)
 
-  fs.exists(newResourcePath, (exists) => {
-    if (!exists) {
+  fs.access(newResourcePath, (err) => {
+    if (err) {
       newResourcePath = resourcePath
     }
 

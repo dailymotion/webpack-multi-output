@@ -3,6 +3,7 @@ import path from 'path'
 import {expect} from 'chai'
 import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import {sync as pathExists} from 'path-exists'
 
 import WebpackMultiOutputPlugin from '../src/plugin'
 import WebpackMultiOutputLoader from '../src/loader'
@@ -92,9 +93,9 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should produce a bundle for each value', () => {
-      const bundleExists = fs.existsSync(bundlePath)
-      const bundleExistsFR = fs.existsSync(bundlePathFR)
-      const bundleExistsEN = fs.existsSync(bundlePathEN)
+      const bundleExists = pathExists(bundlePath)
+      const bundleExistsFR = pathExists(bundlePathFR)
+      const bundleExistsEN = pathExists(bundlePathEN)
 
       expect(bundleExists).to.be.true
       expect(bundleExistsFR).to.be.true
@@ -186,10 +187,10 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should produce a bundle for each value with other plugins', () => {
-      const bundleExists = fs.existsSync(bundlePath)
-      const cssBundlePathExists = fs.existsSync(cssBundlePath)
-      const bundleExistsFR = fs.existsSync(bundlePathFR)
-      const bundleExistsEN = fs.existsSync(bundlePathEN)
+      const bundleExists = pathExists(bundlePath)
+      const cssBundlePathExists = pathExists(cssBundlePath)
+      const bundleExistsFR = pathExists(bundlePathFR)
+      const bundleExistsEN = pathExists(bundlePathEN)
 
       expect(bundleExists).to.be.true
       expect(cssBundlePathExists).to.be.true
@@ -316,9 +317,9 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should produce a bundle for each value', () => {
-      const bundleExists = fs.existsSync(bundlePath)
-      const bundleExistsFR = fs.existsSync(bundlePathFR)
-      const bundleExistsEN = fs.existsSync(bundlePathEN)
+      const bundleExists = pathExists(bundlePath)
+      const bundleExistsFR = pathExists(bundlePathFR)
+      const bundleExistsEN = pathExists(bundlePathEN)
 
       expect(bundleExists).to.be.true
       expect(bundleExistsFR).to.be.true
@@ -326,7 +327,7 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should produce an asset file with all assets per language', () => {
-      const assetsExists = fs.existsSync(assetsPath)
+      const assetsExists = pathExists(assetsPath)
       const assets = require(assetsPath)
 
       expect(assetsExists).to.be.true
@@ -427,9 +428,9 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should produce a bundle for each value', () => {
-      const bundleExists = fs.existsSync(bundlePath)
-      const bundleExistsFR = fs.existsSync(bundlePathFR)
-      const bundleExistsEN = fs.existsSync(bundlePathEN)
+      const bundleExists = pathExists(bundlePath)
+      const bundleExistsFR = pathExists(bundlePathFR)
+      const bundleExistsEN = pathExists(bundlePathEN)
 
       expect(bundleExists).to.be.true
       expect(bundleExistsFR).to.be.true
@@ -437,8 +438,8 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should create an asset file for each value', () => {
-      const assetsExistsFR = fs.existsSync(assetsPathFR)
-      const assetsExistsEN = fs.existsSync(assetsPathEN)
+      const assetsExistsFR = pathExists(assetsPathFR)
+      const assetsExistsEN = pathExists(assetsPathEN)
 
       expect(assetsExistsFR).to.be.true
       expect(assetsExistsEN).to.be.true
@@ -611,16 +612,16 @@ describe('Webpack Multi Output', () => {
     })
 
     it('should create all bundles and chunks', () => {
-      expect(fs.existsSync(mainBundlePathFR)).to.be.true
-      expect(fs.existsSync(mainBundlePathEN)).to.be.true
-      expect(fs.existsSync(secondBundlePathFR)).to.be.true
-      expect(fs.existsSync(secondBundlePathEN)).to.be.true
+      expect(pathExists(mainBundlePathFR)).to.be.true
+      expect(pathExists(mainBundlePathEN)).to.be.true
+      expect(pathExists(secondBundlePathFR)).to.be.true
+      expect(pathExists(secondBundlePathEN)).to.be.true
     })
 
     it('should not create useless chunks', () => {
-      expect(fs.existsSync(momentBundlePath)).to.be.true
-      expect(fs.existsSync(momentBundlePathEN)).to.be.false
-      expect(fs.existsSync(momentBundlePathFR)).to.be.false
+      expect(pathExists(momentBundlePath)).to.be.true
+      expect(pathExists(momentBundlePathEN)).to.be.false
+      expect(pathExists(momentBundlePathFR)).to.be.false
     })
 
     it('should contain the correct text', () => {
