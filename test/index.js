@@ -9,8 +9,6 @@ import WebpackMultiOutputLoader from '../src/loader'
 const compiledLoader = require('../')
 const compiledPlugin = require('../plugin')
 
-import * as test from '../'
-
 const config = {
   entry: path.join(__dirname, 'src/index.js'),
   output: {

@@ -143,3 +143,7 @@ plugins: [
 * `OccurenceOrderPlugin`
 * `UglifyJsPlugin`
 * `extract-text-webpack-plugin`
+
+## Explanation of how things work
+
+See [What](./what.md) for informations about what the plugin is doing and how.

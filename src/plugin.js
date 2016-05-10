@@ -82,9 +82,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
               _v === this.options.values.length && fileCallback()
             })
           })
-        }, () => {
-          chunkCallback()
-        })
+        }, chunkCallback)
       }, callback)
     })
 
