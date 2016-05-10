@@ -73,7 +73,7 @@ And voila! Now for more details:
 
 ### optimize-chunk-assets
 
-* [line 49]((https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L49) This part lets us iterate through all the chunks webpack is processing. This way, for each chunk (actually for each files of a chunk), we create all the versions we want.
+* [line 49](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L49) This part lets us iterate through all the chunks webpack is processing. This way, for each chunk (actually for each files of a chunk), we create all the versions we want.
 * [line 57](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L57) we check if we have something to replace in the chunk. if not, we don't produce multiple assets.
 * [line 64](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L64) we iterate through the values given in the configuration to create a new asset for each value.
 * [line 68](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L68) we process the newly created asset. This uses the [processSource](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L176) method, which will replace all content that we have to replace.
@@ -91,7 +91,7 @@ Now, we're not using `bundle.js` but `fr.bundle.js` we need to load `fr.1.bundle
 ### optimize-assets
 
 * [line 94](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L94) we iterate through the assets we've created to finish some stuff that we want to do once all plugins are done doing their stuff.
-* [line 95](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L95) replace the chunk map. See [Replace chunk map](#replace-chunk-map).
+* [line 95](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L95) replace the chunk map. See [jsonp-script](#jsonp-script).
 * [line 102](https://github.com/dailymotion/webpack-multi-output/blob/135f1a5b2068425cb92c58d383b37b841391f5c7/src/plugin.js#L102) we replace the hash for each assets so the hash are made from their actual content.
 
 ### after-emit
