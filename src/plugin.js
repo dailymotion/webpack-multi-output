@@ -140,7 +140,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
       const ext = path.extname(assetName)
       if (ext !== '.js') {
         for (let value in this.assetsMap) {
-          this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
+          if (!this.assetsMap[value][this.chunkName][ext.replace('.', '')]) {
+            this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
+          }
         }
       }
     })

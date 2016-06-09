@@ -3,6 +3,7 @@ import path from 'path'
 import {expect} from 'chai'
 import webpack from 'webpack'
 import ExtractTextPlugin from 'extract-text-webpack-plugin'
+import WebpackRTLPlugin from 'webpack-rtl-plugin'
 import {sync as pathExists} from 'path-exists'
 
 import WebpackMultiOutputPlugin from '../src/plugin'
@@ -128,8 +129,10 @@ describe('Webpack Multi Output', () => {
   describe('Plugin combining', () => {
     const bundlePath = path.join(__dirname, 'dist-combine-plugins/bundle.js')
     const cssBundlePath = path.join(__dirname, 'dist-combine-plugins/style.css')
+    const rtlCssBundlePath = path.join(__dirname, 'dist-combine-plugins/style.rtl.css')
     const bundlePathFR = path.join(__dirname, 'dist-combine-plugins/fr.bundle.js')
     const bundlePathEN = path.join(__dirname, 'dist-combine-plugins/en.bundle.js')
+    const assetPath = path.join(__dirname, 'dist-combine-plugins/assets.json')
 
     before(function(done) {
       this.timeout(4000)
@@ -168,8 +171,16 @@ describe('Webpack Multi Output', () => {
             values: ['fr', 'en'],
             debug: true,
             uglify: true,
+            assets: {
+              filename: 'assets.json',
+              path: path.join(__dirname, 'dist-combine-plugins'),
+              prettyPrint: true,
+            },
           }),
           new ExtractTextPlugin('style.css'),
+          new WebpackRTLPlugin({
+            filename: 'style.rtl.css',
+          }),
         ],
       }
 
@@ -189,13 +200,17 @@ describe('Webpack Multi Output', () => {
     it('should produce a bundle for each value with other plugins', () => {
       const bundleExists = pathExists(bundlePath)
       const cssBundlePathExists = pathExists(cssBundlePath)
+      const rtlCssBundlePathExists = pathExists(rtlCssBundlePath)
       const bundleExistsFR = pathExists(bundlePathFR)
       const bundleExistsEN = pathExists(bundlePathEN)
+      const assetExists = pathExists(assetPath)
 
       expect(bundleExists).to.be.true
       expect(cssBundlePathExists).to.be.true
+      expect(rtlCssBundlePathExists).to.be.true
       expect(bundleExistsFR).to.be.true
       expect(bundleExistsEN).to.be.true
+      expect(assetExists).to.be.true
     })
 
     it('should include the appropriate content for value FR', done => {
@@ -229,6 +244,26 @@ describe('Webpack Multi Output', () => {
         expect(content).to.not.contain('// webpackBootstrap')
         done()
       })
+    })
+
+    it('should produce an asset file with all assets', () => {
+      const assets = require(assetPath)
+      const expected = {
+        fr: {
+          main: {
+            js: "/static/fr.bundle.js",
+            css: "/static/style.css"
+          }
+        },
+        en: {
+          main: {
+            js: "/static/en.bundle.js",
+            css: "/static/style.css"
+          }
+        }
+      }
+
+      expect(assets).to.eql(expected)
     })
   })
 
