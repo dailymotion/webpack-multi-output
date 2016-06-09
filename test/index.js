@@ -252,13 +252,15 @@ describe('Webpack Multi Output', () => {
         fr: {
           main: {
             js: "/static/fr.bundle.js",
-            css: "/static/style.css"
+            css: "/static/style.css",
+            'rtl.css': "/static/style.rtl.css"
           }
         },
         en: {
           main: {
             js: "/static/en.bundle.js",
-            css: "/static/style.css"
+            css: "/static/style.css",
+            'rtl.css': "/static/style.rtl.css"
           }
         }
       }

@@ -139,8 +139,22 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     Object.keys(compilation.assets).forEach((assetName: string): void => {
       const ext = path.extname(assetName)
       if (ext !== '.js') {
-        for (let value in this.assetsMap) {
-          if (!this.assetsMap[value][this.chunkName][ext.replace('.', '')]) {
+        // horrible quick and dirty fix for .css and .rtl.css
+        if (ext === '.css') {
+          const secondExt = path.extname(assetName.replace(ext, ''))
+          if (secondExt === '.rtl') {
+            for (let value in this.assetsMap) {
+              this.assetsMap[value][this.chunkName]['rtl.css'] = `${compilation.outputOptions.publicPath}${assetName}`
+            }
+          }
+          else {
+            for (let value in this.assetsMap) {
+              this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
+            }
+          }
+        }
+        else {
+          for (let value in this.assetsMap) {
             this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
           }
         }
