@@ -34,7 +34,7 @@
     "moment": "^2.13.0",
     "path-exists": "^3.0.0",
     "style-loader": "^0.13.1",
-    "webpack": "^1.13.0"
+    "webpack": "^1.13.1"
   },
   "dependencies": {
     "async": "^2.0.0-rc.3",
@@ -42,5 +42,8 @@
     "lodash.merge": "^4.3.5",
     "mkdirp": "^0.5.1",
     "webpack-sources": "^0.1.1"
+  },
+  "peerDependencies": {
+    "webpack": "^1.13.1"
   }
 }

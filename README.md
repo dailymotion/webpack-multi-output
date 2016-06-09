@@ -8,6 +8,8 @@ Allows the creation of multiple bundles with one configuration. Kinda like the [
 $ npm install dailymotion/webpack-multi-output
 ```
 
+**Note** This module has been developed with and for webpack v1.13.1. It may not work correctly with other versions.
+
 ## Usage
 
 Use the loader with the appropriate file extension you want, then use the plugin to define the values you want as output:
