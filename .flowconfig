@@ -3,6 +3,8 @@
 .*/node_modules/chai/.*
 .*/node_modules/mocha/.*
 .*/node_modules/flow-bin/.*
+.*/node_modules/webpack-rtl-plugin/.*
+.*/node_modules/findup/.*
 
 [include]
 
