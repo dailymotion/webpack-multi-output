@@ -76,7 +76,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
                   this.chunkHash = compilation.getStats().hash
                 }
                 this.chunkName = chunk.name
-                this.addToAssetsMap(value, chunk.name, `${compilation.outputOptions.publicPath}${filename}`)
+                this.addToAssetsMap(value, chunk.name, 'js', `${compilation.outputOptions.publicPath}${filename}`)
               }
 
               _v++
@@ -106,7 +106,7 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
         if (filename !== newFilename) {
           compilation.assets[newFilename] = source
           delete compilation.assets[filename]
-          this.addToAssetsMap(value, name, `${compilation.outputOptions.publicPath}${newFilename}`)
+          this.addToAssetsMap(value, name, 'js', `${compilation.outputOptions.publicPath}${newFilename}`)
         }
 
         assetCallback()
@@ -136,6 +136,16 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
     mkdirp.sync(this.options.assets.path)
 
+    const chunks = compilation.getStats().toJson().assetsByChunkName
+
+    Object.keys(chunks).forEach(chunkName => {
+      if (chunkName !== this.chunkName) {
+        for (let value in this.assetsMap) {
+          this.addToAssetsMap(value, chunkName, 'js', `${compilation.outputOptions.publicPath}${chunks[chunkName]}`)
+        }
+      }
+    })
+
     Object.keys(compilation.assets).forEach((assetName: string): void => {
       const ext = path.extname(assetName)
       if (ext !== '.js') {
@@ -144,18 +154,18 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
           const secondExt = path.extname(assetName.replace(ext, ''))
           if (secondExt === '.rtl') {
             for (let value in this.assetsMap) {
-              this.assetsMap[value][this.chunkName]['rtl.css'] = `${compilation.outputOptions.publicPath}${assetName}`
+              this.addToAssetsMap(value, this.chunkName, 'rtl.css', `${compilation.outputOptions.publicPath}${assetName}`)
             }
           }
           else {
             for (let value in this.assetsMap) {
-              this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
+              this.addToAssetsMap(value, this.chunkName, ext.replace('.', ''), `${compilation.outputOptions.publicPath}${assetName}`)
             }
           }
         }
         else {
           for (let value in this.assetsMap) {
-            this.assetsMap[value][this.chunkName][ext.replace('.', '')] = `${compilation.outputOptions.publicPath}${assetName}`
+            this.addToAssetsMap(value, this.chunkName, ext.replace('.', ''), `${compilation.outputOptions.publicPath}${assetName}`)
           }
         }
       }
@@ -246,12 +256,16 @@ WebpackMultiOutput.prototype.replaceChunkMap = function(source: Object): string 
   return new ConcatSource(source.source().replace(/\{__WEBPACK_MULTI_OUTPUT_CHUNK_MAP__:2\}/, JSON.stringify(this.chunksMap)))
 }
 
-WebpackMultiOutput.prototype.addToAssetsMap = function(value: string, name: string, filePath: string): void {
-  this.assetsMap[value] = {
-    [name]: {
-      js: filePath,
-    },
+WebpackMultiOutput.prototype.addToAssetsMap = function(value: string, name: string, ext: string, filePath: string): void {
+  const newAsset = {
+    [value]: {
+      [name]: {
+        [ext]: filePath
+      }
+    }
   }
+
+  this.assetsMap = merge(this.assetsMap, newAsset)
 }
 
 WebpackMultiOutput.prototype.log = function(message: string, level: string = 'debug'): void {

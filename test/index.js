@@ -139,7 +139,10 @@ describe('Webpack Multi Output', () => {
       const altConfig = {
         ...config,
         context: path.join(__dirname, '..'),
-        entry: path.join(__dirname, 'src/complex.js'),
+        entry: {
+          main: path.join(__dirname, 'src/complex.js'),
+          vendor: ['lodash.merge'],
+        },
         output: {
           path: path.resolve(__dirname, 'dist-combine-plugins'),
           filename: 'bundle.js',
@@ -181,6 +184,7 @@ describe('Webpack Multi Output', () => {
           new WebpackRTLPlugin({
             filename: 'style.rtl.css',
           }),
+          new webpack.optimize.CommonsChunkPlugin('vendor', 'common.js'),
         ],
       }
 
@@ -254,6 +258,9 @@ describe('Webpack Multi Output', () => {
             js: "/static/fr.bundle.js",
             css: "/static/style.css",
             'rtl.css': "/static/style.rtl.css"
+          },
+          vendor: {
+            js: "/static/common.js",
           }
         },
         en: {
@@ -261,6 +268,9 @@ describe('Webpack Multi Output', () => {
             js: "/static/en.bundle.js",
             css: "/static/style.css",
             'rtl.css': "/static/style.rtl.css"
+          },
+          vendor: {
+            js: "/static/common.js",
           }
         }
       }
@@ -277,7 +287,8 @@ describe('Webpack Multi Output', () => {
     let bundleCSSPathName
     const assetsPath = path.join(__dirname, 'dist-name-hash/name-hash-assets.json')
 
-    before((done) => {
+    before(function(done) {
+      this.timeout(4000)
       const altConfig = {
         ...config,
         entry: {
