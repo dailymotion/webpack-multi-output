@@ -32,6 +32,7 @@ export default function WebpackMultiOutput(options: Object = {}): void {
   this.chunkHash = ''
   this.filePathRe = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/
   this.filePathReG = /WebpackMultiOutput-(.*?)-WebpackMultiOutput/g
+  this.jsonpRe = /__WEBPACK_MULTI_OUTPUT_CHUNK_MAP__/
 }
 
 WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
@@ -55,7 +56,9 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
 
           const source: Object = compilation.assets[file]
 
-          if (!this.filePathReG.test(source.source())) {
+          // ignore files with no code the replace
+          // and no jsonp script
+          if (!this.filePathReG.test(source.source()) && !this.jsonpRe.test(source.source())) {
             this.log(`Ignoring asset ${file}, no replacement to process`, 'ultra')
             return asyncSetImmediate(fileCallback)
           }
@@ -141,7 +144,8 @@ WebpackMultiOutput.prototype.apply = function(compiler: Object): void {
     Object.keys(chunks).forEach(chunkName => {
       if (chunkName !== this.chunkName) {
         for (let value in this.assetsMap) {
-          this.addToAssetsMap(value, chunkName, 'js', `${compilation.outputOptions.publicPath}${chunks[chunkName]}`)
+          // don't force so we keep our versions of vendor and stuff if they're here already
+          this.addToAssetsMap(value, chunkName, 'js', `${compilation.outputOptions.publicPath}${chunks[chunkName]}`, false)
         }
       }
     })
@@ -256,7 +260,7 @@ WebpackMultiOutput.prototype.replaceChunkMap = function(source: Object): string 
   return new ConcatSource(source.source().replace(/\{__WEBPACK_MULTI_OUTPUT_CHUNK_MAP__:2\}/, JSON.stringify(this.chunksMap)))
 }
 
-WebpackMultiOutput.prototype.addToAssetsMap = function(value: string, name: string, ext: string, filePath: string): void {
+WebpackMultiOutput.prototype.addToAssetsMap = function(value: string, name: string, ext: string, filePath: string, force: boolean = true): void {
   const newAsset = {
     [value]: {
       [name]: {
@@ -265,7 +269,12 @@ WebpackMultiOutput.prototype.addToAssetsMap = function(value: string, name: stri
     }
   }
 
-  this.assetsMap = merge(this.assetsMap, newAsset)
+  if (force) {
+    this.assetsMap = merge(this.assetsMap, newAsset)
+  }
+  else {
+    this.assetsMap = merge(newAsset, this.assetsMap)
+  }
 }
 
 WebpackMultiOutput.prototype.log = function(message: string, level: string = 'debug'): void {

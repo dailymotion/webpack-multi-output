@@ -260,7 +260,7 @@ describe('Webpack Multi Output', () => {
             'rtl.css': "/static/style.rtl.css"
           },
           vendor: {
-            js: "/static/common.js",
+            js: "/static/fr.common.js",
           }
         },
         en: {
@@ -270,7 +270,7 @@ describe('Webpack Multi Output', () => {
             'rtl.css': "/static/style.rtl.css"
           },
           vendor: {
-            js: "/static/common.js",
+            js: "/static/en.common.js",
           }
         }
       }
@@ -695,6 +695,107 @@ describe('Webpack Multi Output', () => {
       }
 
       expect(assets).to.eql(expected)
+    })
+  })
+
+  describe('Code splitting and common', () => {
+    const mainBundlePathFR = path.join(__dirname, 'dist-splitting-common/fr.bundle.js')
+    const mainBundlePathEN = path.join(__dirname, 'dist-splitting-common/en.bundle.js')
+    const secondBundlePathFR = path.join(__dirname, 'dist-splitting-common/fr.1.1.js')
+    const secondBundlePathEN = path.join(__dirname, 'dist-splitting-common/en.1.1.js')
+    const momentBundlePath = path.join(__dirname, 'dist-splitting-common/2.bundle.js')
+    const momentBundlePathEN = path.join(__dirname, 'dist-splitting-common/en.2.2.js')
+    const momentBundlePathFR = path.join(__dirname, 'dist-splitting-common/fr.2.2.js')
+    const commonPath = path.join(__dirname, 'dist-splitting-common/en.common.js')
+    const assetsPath = path.join(__dirname, 'dist-splitting-common/assets/assets.json')
+
+    before(function(done) {
+      this.timeout(20000)
+      const altConfig = {
+        ...config,
+        entry: {
+          bundle: path.join(__dirname, 'src-splitting/app/index.js'),
+          vendor: ['lodash.merge'],
+        },
+        output: {
+          path: path.resolve(__dirname, 'dist-splitting-common'),
+          filename: '[name].js',
+          publicPath: '/dist-splitting-common/',
+          // chunkFilename: '[id].[chunkhash].bundle.js',
+        },
+        plugins: [
+          new webpack.optimize.UglifyJsPlugin({
+            output: {
+              comments: false
+            },
+            compressor: {
+              warnings: false
+            }
+          }),
+          new WebpackMultiOutputPlugin({
+            values: ['fr', 'en'],
+            debug: true,
+            ultraDebug: true,
+            uglify: true,
+            assets: {
+              filename: 'assets.json',
+              path: path.join(__dirname, 'dist-splitting-common/assets'),
+              prettyPrint: true,
+            },
+          }),
+          new webpack.optimize.CommonsChunkPlugin('vendor', 'common.js'),
+        ],
+      }
+
+      webpack(altConfig, (err, stats) => {
+        if (err) {
+          return done(err)
+        }
+
+        if (stats.hasErrors()) {
+          return done(new Error(stats.toString()))
+        }
+
+        done()
+      })
+    })
+
+    it('should create all bundles and chunks', () => {
+      expect(pathExists(mainBundlePathFR)).to.be.true
+      expect(pathExists(mainBundlePathEN)).to.be.true
+      expect(pathExists(secondBundlePathFR)).to.be.true
+      expect(pathExists(secondBundlePathEN)).to.be.true
+      expect(pathExists(commonPath)).to.be.true
+    })
+
+    it('should contain a vendor bundle for each value', () => {
+      const assets = require(assetsPath)
+      const expected = {
+        "en": {
+          "bundle": {
+            "js": "/dist-splitting-common/en.bundle.js"
+          },
+          "vendor": {
+            "js": "/dist-splitting-common/en.common.js"
+          }
+        },
+        "fr": {
+          "bundle": {
+            "js": "/dist-splitting-common/fr.bundle.js"
+          },
+          "vendor": {
+            "js": "/dist-splitting-common/fr.common.js"
+          }
+        }
+      }
+
+      expect(assets).to.eql(expected)
+    })
+
+    it('should include the jsonp script modification in the common bundle if needed', () => {
+      const commonContent = fs.readFileSync(commonPath, 'utf-8')
+
+      expect(commonContent).to.contain('{"0":true,"1":true,"3":true}')
     })
   })
 })
