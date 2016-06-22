@@ -794,8 +794,12 @@ describe('Webpack Multi Output', () => {
 
     it('should include the jsonp script modification in the common bundle if needed', () => {
       const commonContent = fs.readFileSync(commonPath, 'utf-8')
-
       expect(commonContent).to.contain('{"0":true,"1":true,"3":true}')
+    })
+
+    it('should contain the correct language prefix', () => {
+      const enCommon = fs.readFileSync(commonPath, 'utf-8')
+      expect(enCommon).to.contain('?"en."')
     })
   })
 })
